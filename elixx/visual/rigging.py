@@ -1215,21 +1215,26 @@ def construir_rig(analise: CharacterAnalysis, rig_id: str = "rig",
     ids = {d.id for d in analise.deteccoes}
     precisa_raiz = any(d.parent_id is None or d.parent_id not in ids
                        for d in analise.deteccoes)
+    raiz_id = "corpo"
+    sufixo = 2
+    while raiz_id in ids:  # parte do usuário já usa "corpo"
+        raiz_id = f"corpo_{sufixo}"
+        sufixo += 1
     if precisa_raiz:
         rig.adicionar_parte(RigPart(
-            "corpo", tipo="corpo",
+            raiz_id, tipo="corpo",
             bounds=Bounds2D(0.0, 0.0, 0.0, 0.0),
             metadata={"origem": "inferida",
                       "papel": "raiz de ancoragem"}))
         rig.avisos.append(
             {"codigo": "hierarquia_inferida",
-             "motivo": "Partes sem pai ancoradas em 'corpo' (raiz "
-                       "sintética; informe parent_id para rig "
+             "motivo": f"Partes sem pai ancoradas em '{raiz_id}' "
+                       "(raiz sintética; informe parent_id para rig "
                        "profissional)."})
     def _pai_de(det) -> str | None:
         if det.parent_id in ids:
             return det.parent_id
-        return "corpo" if precisa_raiz else None
+        return raiz_id if precisa_raiz else None
     pendentes = sorted(analise.deteccoes, key=lambda d: d.id)
     while pendentes:
         progresso = False
