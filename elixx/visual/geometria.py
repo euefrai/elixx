@@ -68,8 +68,9 @@ DIRECOES = ("norte", "sul", "leste", "oeste", "nordeste", "noroeste",
             "sudeste", "sudoeste", "centro")
 """Direções determinísticas a partir de centros (documentado abaixo)."""
 
-MAX_NOS_GEOMETRIA = 20000
-"""Teto anti-gigante (alinha com MAX_NOS da F19)."""
+MAX_NOS_GEOMETRIA = 100000
+"""Teto anti-gigante (F22: mapas planos de percepção com 50k passam;
+hierarquia funda segue limitada por MAX_PROFUNDIDADE_GEO)."""
 
 MAX_PROFUNDIDADE_GEO = 32
 """Teto anti-ciclo/recursão na hierarquia (alinha com F19)."""
