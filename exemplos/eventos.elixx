@@ -1,0 +1,31 @@
+# Exemplo de eventos: aparecer, clicar, passar_por_cima
+janela eventos {
+
+    titulo: "Eventos ELiXX"
+
+    tamanho: 800px 600px
+
+    quando aparecer {
+        mostrar("Janela aberta!")
+    }
+
+    botão primeiro {
+        texto: "Clique aqui"
+
+        quando clicar {
+            mostrar("Você clicou!")
+        }
+
+        quando passar_por_cima {
+            mostrar("O cursor passou por cima!")
+        }
+    }
+
+    botão segundo {
+        texto: "Outro botão"
+
+        quando clicar {
+            mostrar("Clicou no segundo!")
+        }
+    }
+}

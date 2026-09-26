@@ -1,0 +1,62 @@
+# ELiXX — Visual Core 2D (Fase 10)
+# Espaço 2D real: posição, rotação, escala, opacidade, pivô,
+# hierarquia, grupos e camadas. Executar: elixx executar exemplos/visual-core.elixx
+# Verificar: elixx verificar exemplos/visual-core.elixx
+
+janela principal {
+    titulo: "Visual Core 2D"
+    tamanho: 800px 600px
+    fundo: "#14161f"
+
+    # Personagem = grupo com transformação conjunta.
+    grupo personagem {
+        posicao: 300px 200px
+        rotacao: 5deg
+        camada: 10
+
+        imagem tronco {
+            arquivo: "exemplos/assets/logo.png"
+            escala: 1.5
+            opacidade: 90%
+        }
+
+        # O braço gira ao redor do ombro (pivô).
+        imagem braco {
+            arquivo: "exemplos/assets/logo.png"
+            posicao {
+                x: 40
+                y: 20
+            }
+            pivo {
+                x: 10
+                y: 10
+            }
+            rotacao: 25deg
+            escala: 0.8
+        }
+    }
+
+    # Objeto solto em outra camada (frente).
+    imagem objeto {
+        arquivo: "exemplos/assets/logo.png"
+        posicao {
+            x: 700
+            y: 300
+        }
+        escala: 1.5
+        opacidade: 90%
+        camada: 20
+    }
+
+    texto legenda {
+        texto: "Visual Core 2D"
+        posicao: 20px 560px
+    }
+
+    animação aceno {
+        alvo: braco
+        rotacao: 25deg -> 60deg
+        duração: 800ms
+        movimento: suave
+    }
+}

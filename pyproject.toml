@@ -1,0 +1,21 @@
+[project]
+name = "elixx"
+version = "0.2.0"
+description = "ELiXX — linguagem de programação em português para interfaces, animação e multimídia"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+
+[project.scripts]
+elixx = "elixx.cli:entrada"
+
+[tool.setuptools.packages.find]
+include = ["elixx*"]
+
+[tool.pytest.ini_options]
+testpaths = ["testes"]
+pythonpath = ["."]
+
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"

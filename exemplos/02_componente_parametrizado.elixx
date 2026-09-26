@@ -1,0 +1,34 @@
+# 02 — Componente parametrizado: default, override e expressão (Fase 09).
+# Executar: elixx executar exemplos/02_componente_parametrizado.elixx
+
+componente BotaoPrimario {
+    propriedade texto: "Continuar"
+    propriedade largura: 180px
+
+    corpo {
+        botão base {
+            texto: param.texto
+            tamanho: param.largura 40px
+        }
+    }
+}
+
+janela principal {
+    titulo: "Parâmetros"
+
+    tamanho: 500px 300px
+
+    coluna pagina {
+        posição: 16px 16px
+
+        espacamento: 12px
+
+        BotaoPrimario salvar {
+            texto: "Salvar"
+            largura: 220px
+        }
+
+        BotaoPrimario padrao {
+        }
+    }
+}

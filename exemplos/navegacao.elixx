@@ -1,0 +1,130 @@
+# ELiXX — Navegação entre telas (Fase 08).
+# Executar: elixx executar exemplos/navegacao.elixx
+# ir() empilha, voltar() desempilha, inicio() volta ao começo.
+
+tela inicio {
+
+    titulo: "Início"
+
+    tamanho: 640px 460px
+
+    fundo: "#14161f"
+
+    texto titulo {
+
+        conteúdo: "Tela: início"
+
+        posição: 24px 24px
+
+        fonte: 20px
+
+        cor: "#e6e8f0"
+    }
+
+    botão ir_perfil {
+
+        texto: "Ir para perfil"
+
+        posição: 24px 90px
+
+        tamanho: 180px 44px
+
+        quando clicar {
+            ir("perfil")
+        }
+    }
+
+    botão ir_config {
+
+        texto: "Ir para config"
+
+        posição: 24px 150px
+
+        tamanho: 180px 44px
+
+        quando clicar {
+            ir("config")
+        }
+    }
+}
+
+tela perfil {
+
+    titulo: "Perfil"
+
+    tamanho: 640px 460px
+
+    fundo: "#1a1d29"
+
+    texto titulo {
+
+        conteúdo: "Tela: perfil"
+
+        posição: 24px 24px
+
+        fonte: 20px
+
+        cor: "#e6e8f0"
+    }
+
+    botão voltar_btn {
+
+        texto: "Voltar"
+
+        posição: 24px 90px
+
+        tamanho: 140px 44px
+
+        quando clicar {
+            voltar()
+        }
+    }
+
+    botão inicio_btn {
+
+        texto: "Início"
+
+        posição: 24px 150px
+
+        tamanho: 140px 44px
+
+        quando clicar {
+            inicio()
+        }
+    }
+}
+
+tela config {
+
+    titulo: "Config"
+
+    tamanho: 640px 460px
+
+    fundo: "#101018"
+
+    inicial: verdadeiro
+
+    texto titulo {
+
+        conteúdo: "Tela: config (inicial)"
+
+        posição: 24px 24px
+
+        fonte: 20px
+
+        cor: "#e6e8f0"
+    }
+
+    botão voltar_btn {
+
+        texto: "Voltar"
+
+        posição: 24px 90px
+
+        tamanho: 140px 44px
+
+        quando clicar {
+            voltar()
+        }
+    }
+}

@@ -1,0 +1,146 @@
+# ELiXX — Motion Lab (Fase 11: Motion Core 2.0)
+# linear, suave, rotação, escala, fade, bounce, elastic, spring,
+# sequência, paralelo, ping-pong, grupo, filho e pivô.
+# Executar: elixx executar exemplos/motion-core.elixx
+
+janela lab {
+    titulo: "Motion Lab"
+    tamanho: 800px 600px
+    fundo: "#14161f"
+
+    texto titulo {
+        texto: "Motion Lab"
+        posição: 20px 10px
+    }
+
+    texto linear {
+        texto: "Linear"
+        posição: 20px 60px
+    }
+
+    texto suave {
+        texto: "Suave"
+        posição: 20px 110px
+    }
+
+    texto mola {
+        texto: "Spring"
+        posição: 20px 160px
+    }
+
+    texto quique {
+        texto: "Bounce"
+        posição: 20px 210px
+    }
+
+    texto elastico {
+        texto: "Elastic"
+        posição: 20px 260px
+    }
+
+    texto vai_volta {
+        texto: "PingPong"
+        posição: 20px 310px
+    }
+
+    grupo personagem {
+        posição: 500px 400px
+        camada: 10
+
+        imagem tronco {
+            arquivo: "exemplos/assets/logo.png"
+            escala: 1.2
+        }
+
+        imagem braco {
+            arquivo: "exemplos/assets/logo.png"
+            posição {
+                x: 40
+                y: 20
+            }
+            pivô {
+                x: 10
+                y: 10
+            }
+            escala: 0.8
+        }
+    }
+
+    animação move_linear {
+        alvo: linear
+        posição: 20px 60px -> 220px 60px
+        duração: 2s
+        movimento: linear
+    }
+
+    animação move_suave {
+        alvo: suave
+        posição: 20px 110px -> 220px 110px
+        duração: 2s
+        movimento: suave
+    }
+
+    animação move_mola {
+        alvo: mola
+        posição: 20px 160px -> 220px 160px
+        duração: 2s
+        fisica: mola
+        rigidez: 120
+        amortecimento: 8
+    }
+
+    animação move_quique {
+        alvo: quique
+        posição: 20px 210px -> 220px 210px
+        duração: 2s
+        movimento: quicar
+    }
+
+    animação move_elastico {
+        alvo: elastico
+        posição: 20px 260px -> 220px 260px
+        duração: 2s
+        movimento: elastico
+    }
+
+    animação move_pingpong {
+        alvo: vai_volta
+        posição: 20px 310px -> 220px 310px
+        duração: 1s
+        movimento: suave
+        modo: ping_pong
+        repetir: 4
+    }
+
+    animação gira_braco {
+        alvo: braco
+        rotação: 0deg -> 60deg
+        duração: 1s
+        movimento: suave
+        modo: ping_pong
+        repetir: 4
+    }
+
+    animação passeio {
+        alvo: personagem
+        duração: 4s
+        movimento: suave
+        0% {
+            posição: 500px 400px
+        }
+        50% {
+            posição: 650px 300px
+        }
+        100% {
+            posição: 500px 400px
+        }
+    }
+
+    animação fade_titulo {
+        alvo: titulo
+        opacidade: 1 -> 0.3
+        duração: 2s
+        movimento: lento
+        depois: move_linear
+    }
+}

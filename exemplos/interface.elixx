@@ -1,0 +1,15 @@
+janela principal {
+
+    titulo: "Minha primeira aplicação ELiXX"
+
+    tamanho: 800px 500px
+
+    botão abrir {
+
+        texto: "Abrir"
+
+        quando clicar {
+            mostrar("Olá, ELiXX!")
+        }
+    }
+}

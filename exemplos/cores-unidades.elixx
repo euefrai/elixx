@@ -1,0 +1,25 @@
+# Exemplo de cores e unidades
+janela estilo {
+
+    titulo: "Cores e unidades"
+
+    tamanho: 800px 600px
+
+    fundo: azul
+
+    texto saudacao {
+        texto: "ELiXX com estilo"
+        cor: vermelho
+    }
+
+    texto detalhe {
+        texto: "Hexadecimal também vale"
+        cor: "#00aa00"
+    }
+
+    botão ok {
+        texto: "Confirmar"
+        tamanho: 200px 50px
+        fundo: verde
+    }
+}

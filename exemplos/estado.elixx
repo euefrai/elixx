@@ -1,0 +1,176 @@
+# ELiXX — Estado e reatividade (Fase 05). Executar: elixx executar exemplos/estado.elixx
+# estado { } declara variáveis; origem: estado.x lê; estado.x = v escreve.
+
+estado {
+    contador: 0
+    nome: "Visitante"
+    ativo: verdadeiro
+    pontos: 10
+    preco: 5
+}
+
+janela principal {
+
+    titulo: "Estado ELiXX"
+
+    tamanho: 620px 560px
+
+    fundo: "#14161f"
+
+    coluna pagina {
+
+        posição: 16px 16px
+
+        tamanho: 588px 528px
+
+        espacamento: 10px
+
+        texto titulo {
+
+            conteúdo: "Estado reativo"
+
+            fonte: 16px
+
+            cor: "#e6e8f0"
+        }
+
+        texto rot_cont {
+
+            conteúdo: "Contador (estado → texto):"
+
+            fonte: 11px
+
+            cor: "#9aa0b4"
+        }
+
+        texto val_contador {
+
+            origem: estado.contador
+
+            formato: "inteiro"
+
+            fonte: 28px
+
+            cor: "#e6e8f0"
+        }
+
+        linha botoes {
+
+            espacamento: 8px
+
+            botão mais {
+
+                texto: "+1"
+
+                tamanho: 90px 40px
+
+                quando clicar {
+                    estado.contador += 1
+                }
+            }
+
+            botão menos {
+
+                texto: "-1"
+
+                tamanho: 90px 40px
+
+                quando clicar {
+                    estado.contador -= 1
+                }
+            }
+
+            botão dobrar {
+
+                texto: "x2"
+
+                tamanho: 90px 40px
+
+                quando clicar {
+                    estado.contador *= 2
+                }
+            }
+
+            botão zerar {
+
+                texto: "Zerar"
+
+                tamanho: 90px 40px
+
+                quando clicar {
+                    estado.contador = 0
+                }
+            }
+        }
+
+        separador div {
+
+            largura: 100%
+        }
+
+        texto rot_nome {
+
+            conteúdo: "Nome (digite: entrada → estado → texto):"
+
+            fonte: 11px
+
+            cor: "#9aa0b4"
+        }
+
+        entrada campo_nome {
+
+            ligado_a: estado.nome
+
+            largura: 300px
+        }
+
+        texto eco_nome {
+
+            origem: estado.nome
+
+            fonte: 16px
+
+            cor: "#7aa2ff"
+        }
+
+        linha checks_linha {
+
+            espacamento: 16px
+
+            checkbox chk_ativo {
+
+                texto: "Ativo"
+
+                ligado_a: estado.ativo
+            }
+
+            indicador ind_ativo {
+
+                texto: "estado.ativo"
+
+                origem: estado.ativo
+            }
+        }
+
+        texto total {
+
+            origem: estado.pontos * estado.preco
+
+            fonte: 14px
+
+            cor: "#e6e8f0"
+        }
+
+        botão somar_ponto {
+
+            texto: "Somar ponto"
+
+            tamanho: 160px 40px
+
+            quando clicar {
+                estado.pontos += 1
+                mostrar(estado.pontos)
+            }
+        }
+    }
+}

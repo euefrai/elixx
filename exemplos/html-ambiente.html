@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <title>Loja ELiXX</title>
+</head>
+<body>
+  <header id="topo" class="barra topo">
+    <img id="logo" src="logo.png" alt="ELiXX">
+    <button id="botao_login" class="btn primaria">Entrar</button>
+  </header>
+
+  <nav id="menu" aria-label="Menu principal">
+    <a id="link_inicio" href="/inicio">Início</a>
+    <a id="link_produtos" href="/produtos">Produtos</a>
+    <a id="link_config" href="/config">Configurações</a>
+  </nav>
+
+  <main id="conteudo">
+    <section id="destaques" class="card principal">
+      <h1 id="titulo">Ofertas da semana</h1>
+      <p id="subtitulo">Preços <strong>imperdíveis</strong> hoje.</p>
+      <button id="botao_comprar" aria-label="Comprar agora">Comprar</button>
+    </section>
+
+    <section id="cadastro">
+      <h2>Cadastro</h2>
+      <form id="form_cadastro" action="/cadastrar" method="post">
+        <label for="campo_nome">Nome</label>
+        <input id="campo_nome" name="nome" type="text"
+               placeholder="Seu nome" required>
+        <label for="campo_busca">Busca</label>
+        <input id="campo_busca" name="q" type="search" value="teclado">
+        <label for="campo_estado">Estado</label>
+        <select id="campo_estado" name="estado">
+          <option value="sp" selected>São Paulo</option>
+          <option value="rj">Rio de Janeiro</option>
+        </select>
+        <label for="campo_obs">Observações</label>
+        <textarea id="campo_obs" name="obs" rows="3"></textarea>
+        <input id="check_ofertas" name="ofertas" type="checkbox"
+               checked>
+        <label for="check_ofertas">Receber ofertas</label>
+        <input id="radio_pix" name="pagto" type="radio" value="pix">
+        <label for="radio_pix">Pix</label>
+        <input id="campo_senha" name="senha" type="password" disabled>
+        <button id="botao_enviar" type="submit">Enviar</button>
+      </form>
+    </section>
+
+    <section id="precos">
+      <h2>Preços</h2>
+      <table id="tabela_precos">
+        <tr><th>Produto</th><th>Preço</th></tr>
+        <tr><td>Teclado</td><td>R$ 199</td></tr>
+      </table>
+      <ul id="lista_itens">
+        <li>Frete grátis</li>
+        <li>Garantia de 1 ano</li>
+      </ul>
+    </section>
+
+    <div id="painel_config" role="button"
+         aria-label="Configurações" class="card">
+      Abrir configurações
+    </div>
+  </main>
+
+  <footer id="rodape">
+    <p>© 2026 Loja ELiXX — <a id="link_ajuda"
+       href="javascript:alert('x')">Ajuda</a></p>
+  </footer>
+
+  <fancy-widget id="misterio" data-info="desconhecido">
+    Conteúdo futuro
+  </fancy-widget>
+
+  <script>alert("teste");</script>
+  <button id="botao_perigo" onclick="roubar()">Não clique</button>
+</body>
+</html>

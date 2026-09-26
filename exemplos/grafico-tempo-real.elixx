@@ -1,0 +1,85 @@
+# ELiXX — Gráfico em tempo real (Fase 07).
+# Executar: elixx executar exemplos/grafico-tempo-real.elixx
+# A CPU é amostrada a cada ciclo do Vinculador; o histórico (60 pontos)
+# desenha sozinho, sem travar a interface.
+
+janela principal {
+
+    titulo: "Tempo real ELiXX"
+
+    tamanho: 760px 560px
+
+    fundo: "#14161f"
+
+    coluna pagina {
+
+        posição: 16px 16px
+
+        tamanho: 728px 528px
+
+        espacamento: 10px
+
+        texto titulo {
+
+            conteúdo: "CPU ao vivo (histórico de 60 amostras)"
+
+            fonte: 16px
+
+            cor: "#e6e8f0"
+        }
+
+        linha topo {
+
+            espacamento: 16px
+
+            texto val_cpu {
+
+                origem: dados.sistema.cpu
+
+                formato: "percentual"
+
+                fonte: 28px
+
+                cor: "#4ade80"
+            }
+
+            texto relogio {
+
+                origem: dados.sistema.hora
+
+                fonte: 20px
+
+                cor: "#9aa0b4"
+            }
+        }
+
+        grafico hist {
+
+            origem: dados.sistema.cpu
+
+            formato: "percentual"
+
+            texto: "CPU — ao vivo"
+
+            tamanho: 690px 220px
+
+            cor: "#4ade80"
+        }
+
+        barra nivel {
+
+            origem: dados.sistema.cpu
+
+            tamanho: 690px 18px
+        }
+
+        texto dica {
+
+            conteúdo: "Sem threads extras: um tick, um Vinculador, uma Cena."
+
+            fonte: 11px
+
+            cor: "#9aa0b4"
+        }
+    }
+}

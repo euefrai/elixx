@@ -1,0 +1,70 @@
+# 05 — Ações reutilizáveis, com e sem parâmetros (Fase 09).
+# Executar: elixx executar exemplos/05_acoes.elixx
+
+estado {
+    contador: 0
+    selecionado: -1
+}
+
+acao incrementar {
+    estado.contador += 1
+}
+
+acao selecionar(id) {
+    estado.selecionado = id
+}
+
+acao zerar {
+    estado.contador = 0
+    estado.selecionado = -1
+}
+
+janela principal {
+    titulo: "Ações"
+
+    tamanho: 500px 360px
+
+    coluna pagina {
+        posição: 16px 16px
+
+        espacamento: 10px
+
+        texto valor {
+            origem: estado.contador
+            formato: "inteiro"
+        }
+
+        texto sel {
+            origem: estado.selecionado
+            formato: "inteiro"
+        }
+
+        linha botoes {
+            espacamento: 8px
+
+            botão mais {
+                texto: "+1"
+
+                quando clicar {
+                    executar incrementar
+                }
+            }
+
+            botão escolher {
+                texto: "Escolher 7"
+
+                quando clicar {
+                    executar selecionar(7)
+                }
+            }
+
+            botão limpar {
+                texto: "Zerar"
+
+                quando clicar {
+                    executar zerar
+                }
+            }
+        }
+    }
+}

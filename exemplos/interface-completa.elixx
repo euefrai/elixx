@@ -1,0 +1,51 @@
+# Interface com posição, fonte, cores e eventos (Fase 02)
+janela principal {
+
+    titulo: "ELiXX Nativo"
+
+    tamanho: 800px 500px
+
+    fundo: branco
+
+    texto saudacao {
+
+        conteúdo: "Olá, ELiXX"
+
+        posição: 100px 60px
+
+        fonte: 24px
+
+        cor: azul
+    }
+
+    botão abrir {
+
+        texto: "Abrir"
+
+        posição: 100px 200px
+
+        tamanho: 200px 50px
+
+        quando clicar {
+            mostrar("Olá, ELiXX!")
+        }
+
+        quando passar_por_cima {
+            mostrar("Passe o cursor e clique!")
+        }
+    }
+
+    botão fechar {
+
+        texto: "Fechar"
+
+        posição: 320px 200px
+
+        tamanho: 200px 50px
+
+        quando clicar {
+            esconder("fechar")
+            mostrar("Botão fechar escondido!")
+        }
+    }
+}

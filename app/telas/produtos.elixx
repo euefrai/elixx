@@ -1,0 +1,35 @@
+# Tela de produtos: lista dinâmica de ProdutoCard.
+
+tela produtos {
+    titulo: "Produtos"
+
+    tamanho: 700px 600px
+
+    coluna pagina {
+        posição: 16px 16px
+
+        espacamento: 12px
+
+        texto titulo {
+            conteúdo: "Produtos (lista dinâmica)"
+
+            fonte: 18px
+        }
+
+        lista catalogo {
+            origem: estado.produtos.valor.produtos
+            chave: item.id
+            tamanho: 460px 380px
+
+            modelo {
+                ProdutoCard card {
+                    produto: item
+                }
+            }
+        }
+
+        texto ultimo {
+            origem: estado.ultimo_excluido
+        }
+    }
+}

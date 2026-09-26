@@ -1,0 +1,31 @@
+# Exemplo de lógica: função, se/senão, repetir
+função dobrar(valor) {
+    retornar valor * 2
+}
+
+janela logica {
+
+    titulo: "Lógica ELiXX"
+
+    tamanho: 800px 600px
+
+    botão calcular {
+        texto: "Calcular"
+
+        quando clicar {
+            mostrar(dobrar(21))
+        }
+
+        quando aparecer {
+            repetir 3 vezes {
+                mostrar("preparando...")
+            }
+            se 2 > 1 {
+                mostrar("dois é maior que um")
+            }
+            senão {
+                mostrar("impossível")
+            }
+        }
+    }
+}

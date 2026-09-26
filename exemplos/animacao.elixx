@@ -1,0 +1,168 @@
+# ELiXX — Animação real (Fase 03). Executar: elixx executar exemplos/animacao.elixx
+# Motor interpola na Cena; o Tk aplica posição/tamanho/alfa da janela.
+# Opacidade de widgets ainda não renderiza no Tk (valor existe na Cena).
+
+janela principal {
+
+    titulo: "Animação ELiXX"
+
+    tamanho: 700px 460px
+
+    fundo: "#14161f"
+
+    quando aparecer {
+        mostrar("Animação automática iniciada")
+    }
+
+    # 1. chegada automática e suave
+    animação chegada {
+        alvo: cartao1
+        posição: 200px 220px → 200px 40px
+        duração: 800ms
+        movimento: suave
+    }
+
+    # 2. quique manual (repete 2x) + volta em sequência
+    animação quique {
+        alvo: jogador
+        posição: 200px 300px → 200px 180px
+        duração: 700ms
+        movimento: quicar
+        repetir: 2
+        início: manual
+        quando terminar {
+            mostrar("quicou!")
+        }
+    }
+
+    animação volta {
+        alvo: jogador
+        posição: 200px 180px → 200px 300px
+        duração: 500ms
+        movimento: deslizar
+        início: manual
+        depois: quique
+    }
+
+    # 3. fantasma: alfa REAL da janela (0.4) e restauração
+    animação fantasma {
+        alvo: principal
+        opacidade: 1 → 0.4
+        duração: 900ms
+        movimento: lento
+        início: manual
+    }
+
+    animação volta_janela {
+        alvo: principal
+        opacidade: 0.4 → 1
+        duração: 600ms
+        movimento: suave
+        início: manual
+    }
+
+    # 4. desaparecer: some de verdade no fim
+    animação sumico {
+        alvo: adeus
+        movimento: desaparecer
+        duração: 400ms
+        início: manual
+        quando terminar {
+            mostrar("sumiu!")
+        }
+    }
+
+    cartao cartao1 {
+
+        posição: 200px 220px
+
+        tamanho: 240px 110px
+
+        fundo: "#1a1d29"
+
+        texto rot {
+
+            conteúdo: "CARTÃO ANIMADO"
+
+            posição: 12px 8px
+
+            fonte: 11px
+
+            cor: "#9aa0b4"
+        }
+
+        texto dica {
+
+            conteúdo: "deslizou sozinho (suave)"
+
+            posição: 12px 44px
+
+            fonte: 12px
+
+            cor: "#e6e8f0"
+        }
+    }
+
+    botão jogador {
+
+        texto: "Quicar"
+
+        posição: 200px 300px
+
+        tamanho: 160px 44px
+
+        quando clicar {
+            iniciar("quique")
+        }
+    }
+
+    texto adeus {
+
+        conteúdo: "vou sumir..."
+
+        posição: 440px 60px
+
+        fonte: 14px
+
+        cor: "#e6e8f0"
+    }
+
+    botão btn_some {
+
+        texto: "Sumir"
+
+        posição: 440px 110px
+
+        tamanho: 140px 40px
+
+        quando clicar {
+            iniciar("sumico")
+        }
+    }
+
+    botão btn_fantasma {
+
+        texto: "Fantasma"
+
+        posição: 440px 300px
+
+        tamanho: 140px 40px
+
+        quando clicar {
+            iniciar("fantasma")
+        }
+    }
+
+    botão btn_volta {
+
+        texto: "Restaurar"
+
+        posição: 440px 350px
+
+        tamanho: 140px 40px
+
+        quando clicar {
+            iniciar("volta_janela")
+        }
+    }
+}

@@ -1,0 +1,77 @@
+# ELiXX — World Core (Fase 13: representação lógica do mundo 2D)
+# Cena = visual. Mundo = significado. Consultas sem renderização.
+# Executar: elixx executar exemplos/world-core.elixx
+
+janela palco {
+    titulo: "World Core"
+    tamanho: 800px 600px
+    fundo: "#14161f"
+
+    personagem Heroi {
+        posição: 200px 400px
+
+        parte corpo {
+            imagem: "exemplos/assets/logo.png"
+            escala: 1.2
+        }
+
+        parte cabeca {
+            posição: 20px 0px
+        }
+    }
+
+    imagem caixa_visual {
+        arquivo: "exemplos/assets/logo.png"
+        posição: 600px 480px
+        tamanho: 40px 40px
+    }
+
+    imagem chao_visual {
+        arquivo: "exemplos/assets/logo.png"
+        posição: 0px 550px
+        tamanho: 800px 50px
+    }
+
+    mundo Mundo {
+        tamanho: 2000px 1200px
+
+        chão piso {
+            posição: 0px 550px
+            tamanho: 2000px 50px
+            visual: chao_visual
+        }
+
+        plataforma superior {
+            posição: 500px 350px
+            tamanho: 300px 30px
+        }
+
+        parede esquerda {
+            posição: 0px 0px
+            tamanho: 40px 600px
+        }
+
+        área sala {
+            posição: 100px 100px
+            tamanho: 600px 400px
+        }
+
+        objeto caixa {
+            posição: 600px 480px
+            tamanho: 40px 40px
+            categoria: "caixa"
+            tag: "interativo"
+            visual: caixa_visual
+        }
+
+        ponto objetivo {
+            posição: 700px 300px
+        }
+
+        ponto spawn {
+            posição: 200px 400px
+        }
+
+        usar personagem Heroi
+    }
+}

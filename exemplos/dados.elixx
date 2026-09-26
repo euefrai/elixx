@@ -1,0 +1,76 @@
+# ELiXX — Dados locais e periodicidade (Fase 06).
+# Executar: elixx executar exemplos/dados.elixx
+# FonteArquivo lê JSON do disco; FonteRemota com atualizar busca sozinha.
+
+dados config {
+    arquivo: "dados-demo/status.json"
+}
+
+estado {
+    versao: 0
+}
+
+janela principal {
+
+    titulo: "Dados ELiXX"
+
+    tamanho: 640px 480px
+
+    fundo: "#14161f"
+
+    coluna pagina {
+
+        posição: 16px 16px
+
+        tamanho: 608px 448px
+
+        espacamento: 10px
+
+        texto titulo {
+
+            conteúdo: "Arquivo JSON → estado → lista"
+
+            fonte: 16px
+
+            cor: "#e6e8f0"
+        }
+
+        lista avisos {
+
+            origem: estado.config.valor.avisos
+
+            tamanho: 560px 200px
+        }
+
+        texto versao {
+
+            origem: estado.config.valor.versao_dados
+
+            formato: "inteiro"
+
+            fonte: 14px
+
+            cor: "#7aa2ff"
+        }
+
+        texto erro_cfg {
+
+            origem: estado.config.erro
+
+            fonte: 12px
+
+            cor: "#f87171"
+        }
+
+        botão recarregar {
+
+            texto: "Recarregar arquivo"
+
+            tamanho: 200px 40px
+
+            quando clicar {
+                mostrar(estado.config.valor.versao_dados)
+            }
+        }
+    }
+}

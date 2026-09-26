@@ -1,0 +1,119 @@
+# ELiXX — Galeria multimídia (Fase 07).
+# Executar: elixx executar exemplos/multimidia.elixx
+# Imagem + SVG + ícones + áudio + vídeo (honesto) + gráfico.
+
+estado {
+    numeros: [4, 9, 6, 12]
+}
+
+janela principal {
+
+    titulo: "Multimídia ELiXX"
+
+    tamanho: 760px 620px
+
+    fundo: "#14161f"
+
+    coluna pagina {
+
+        posição: 16px 16px
+
+        tamanho: 728px 588px
+
+        espacamento: 10px
+
+        texto titulo {
+
+            conteúdo: "Galeria: imagem, SVG, ícones, áudio, vídeo"
+
+            fonte: 16px
+
+            cor: "#e6e8f0"
+        }
+
+        linha topo {
+
+            espacamento: 20px
+
+            imagem logo {
+
+                arquivo: "assets/logo.png"
+
+                tamanho: 96px 96px
+            }
+
+            icone salvar {
+
+                tamanho: 40px 40px
+
+                cor: "#7aa2ff"
+            }
+
+            icone pesquisar {
+
+                tamanho: 40px 40px
+
+                cor: "#4ade80"
+            }
+
+            icone fechar {
+
+                tamanho: 40px 40px
+
+                cor: "#f87171"
+            }
+        }
+
+        linha meio {
+
+            espacamento: 20px
+
+            audio musica {
+
+                arquivo: "assets/som.wav"
+
+                volume: 90
+            }
+
+            botão tocar {
+
+                texto: "Tocar som"
+
+                tamanho: 140px 40px
+
+                quando clicar {
+                    reproduzir("musica")
+                }
+            }
+
+            botão parar_btn {
+
+                texto: "Parar"
+
+                tamanho: 100px 40px
+
+                quando clicar {
+                    parar("musica")
+                }
+            }
+        }
+
+        video demo {
+
+            texto: "apresentação"
+
+            tamanho: 320px 120px
+        }
+
+        grafico mini {
+
+            tipo: "barras"
+
+            texto: "Mini barras"
+
+            origem: estado.numeros
+
+            tamanho: 400px 120px
+        }
+    }
+}

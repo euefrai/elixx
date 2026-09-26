@@ -1,0 +1,96 @@
+# ELiXX — Environment (Fase 19: estrutura externa vira ambiente espacial)
+# Espelha a árvore do Environment de demonstração:
+# Janela / Barra superior / Menu lateral (Início, Configurações, Perfil)
+# / Conteúdo (Painel + Botão). O Python equivalente está em
+# exemplos/environment_demo.py (Environment → World → Navigation → AI).
+# Executar: elixx executar exemplos/environment.elixx
+
+janela environment {
+    titulo: "Environment Demo"
+    tamanho: 800px 600px
+    fundo: "#10131c"
+
+    personagem Agente {
+        posição: 160px 50px
+
+        parte corpo {
+        }
+
+        capacidade andar
+
+        pose repouso {
+            corpo:
+                rotação: 0deg
+        }
+    }
+
+    mundo Espaco {
+        tamanho: 800px 600px
+
+        área janela {
+            posição: 0px 0px
+            tamanho: 800px 600px
+        }
+
+        área barra {
+            posição: 0px 0px
+            tamanho: 800px 40px
+        }
+
+        área menu {
+            posição: 0px 40px
+            tamanho: 150px 560px
+        }
+
+        área conteudo {
+            posição: 150px 40px
+            tamanho: 650px 560px
+        }
+
+        plataforma painel {
+            posição: 170px 60px
+            tamanho: 300px 150px
+        }
+
+        ponto inicio {
+            posição: 75px 65px
+        }
+
+        ponto config {
+            posição: 75px 105px
+        }
+
+        ponto perfil {
+            posição: 75px 145px
+        }
+
+        ponto botao_ok {
+            posição: 230px 85px
+        }
+
+        usar personagem Agente
+    }
+
+    navegacao RotasEnv {
+        caminho Agente -> conteudo {
+            modo: andar
+        }
+
+        caminho conteudo -> painel {
+            modo: andar
+        }
+
+        caminho painel -> botao_ok {
+            modo: andar
+        }
+
+        caminho menu -> conteudo {
+            modo: andar
+        }
+    }
+
+    texto legenda {
+        texto: "F19: estrutura externa → World → Navigation → IA"
+        posição: 20px 10px
+    }
+}

@@ -1,0 +1,121 @@
+# 09 — App completa em um arquivo (Fase 09).
+# Executar: elixx executar exemplos/09_app_completa.elixx
+# (versão multimódulo em app/principal.elixx via import)
+
+tema escuro {
+    cores {
+        fundo: "#14161f"
+        texto: "#e6e8f0"
+        destaque: "#4ade80"
+    }
+
+    tamanhos {
+        titulo: 20px
+        normal: 13px
+    }
+}
+
+estado {
+    contador: 0
+    total: 0
+}
+
+acao somar(valor) {
+    estado.contador += 1
+    estado.total = estado.total + valor
+}
+
+funcao dobro(x) {
+    retornar x * 2
+}
+
+tela inicio {
+    titulo: "App"
+
+    tamanho: 600px 480px
+
+    tema: "escuro"
+
+    fundo: tema.fundo
+
+    inicial: verdadeiro
+
+    coluna pagina {
+        posição: 16px 16px
+
+        espacamento: 10px
+
+        texto titulo {
+            conteúdo: "App completa"
+
+            fonte: tema.titulo
+
+            cor: tema.texto
+        }
+
+        texto cont {
+            origem: estado.contador
+            formato: "inteiro"
+        }
+
+        texto soma {
+            origem: estado.total
+            formato: "inteiro"
+        }
+
+        texto calc {
+            origem: dobro(21)
+            formato: "inteiro"
+        }
+
+        linha botoes {
+            espacamento: 8px
+
+            botão mais {
+                texto: "+10"
+
+                quando clicar {
+                    executar somar(10)
+                }
+            }
+
+            botão painel_btn {
+                texto: "Painel"
+
+                quando clicar {
+                    ir("quadro")
+                }
+            }
+        }
+    }
+}
+
+tela quadro {
+    titulo: "Painel"
+
+    tamanho: 600px 480px
+
+    tema: "escuro"
+
+    fundo: tema.fundo
+
+    texto titulo {
+        conteúdo: "Segunda tela"
+
+        posição: 16px 16px
+
+        fonte: tema.titulo
+
+        cor: tema.destaque
+    }
+
+    botão voltar_btn {
+        texto: "Voltar"
+
+        posição: 16px 80px
+
+        quando clicar {
+            voltar()
+        }
+    }
+}

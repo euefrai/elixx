@@ -1,0 +1,22 @@
+# Módulo base (importado por 07_modulos.elixx).
+
+estado {
+    veio_de: "modulo base"
+}
+
+componente CartaoSimples {
+    propriedade titulo: "Sem título"
+
+    corpo {
+        cartao base {
+            tamanho: 280px 90px
+            fundo: "#1a1d29"
+
+            texto rot {
+                conteúdo: param.titulo
+                posição: 12px 12px
+                cor: "#e6e8f0"
+            }
+        }
+    }
+}

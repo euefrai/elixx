@@ -1,0 +1,139 @@
+# ELiXX — Gráficos reativos (Fase 07: linha, barras, pizza, área).
+# Executar: elixx executar exemplos/grafico.elixx
+# Os botões mudam o estado; os 4 gráficos reagem sem reconstruir nada.
+
+estado {
+    vendas: [10]
+}
+
+janela principal {
+
+    titulo: "Gráficos ELiXX"
+
+    tamanho: 900px 640px
+
+    fundo: "#14161f"
+
+    coluna pagina {
+
+        posição: 16px 16px
+
+        tamanho: 868px 608px
+
+        espacamento: 10px
+
+        texto titulo {
+
+            conteúdo: "Vendas (mude o estado, veja os 4 tipos)"
+
+            fonte: 16px
+
+            cor: "#e6e8f0"
+        }
+
+        linha fileira1 {
+
+            espacamento: 16px
+
+            grafico linha_vendas {
+
+                tipo: "linha"
+
+                texto: "Linha"
+
+                origem: estado.vendas
+
+                tamanho: 400px 160px
+
+                cor: "#4ade80"
+            }
+
+            grafico barras_vendas {
+
+                tipo: "barras"
+
+                texto: "Barras"
+
+                origem: estado.vendas
+
+                tamanho: 400px 160px
+            }
+        }
+
+        linha fileira2 {
+
+            espacamento: 16px
+
+            grafico pizza_vendas {
+
+                tipo: "pizza"
+
+                texto: "Pizza"
+
+                origem: estado.vendas
+
+                tamanho: 400px 160px
+            }
+
+            grafico area_vendas {
+
+                tipo: "area"
+
+                texto: "Área"
+
+                origem: estado.vendas
+
+                tamanho: 400px 160px
+
+                cor: "#7aa2ff"
+            }
+        }
+
+        linha botoes {
+
+            espacamento: 8px
+
+            botão semana1 {
+
+                texto: "Semana 1"
+
+                tamanho: 120px 40px
+
+                quando clicar {
+                    estado.vendas = [10]
+                }
+            }
+
+            botão semana2 {
+
+                texto: "Semana 2"
+
+                tamanho: 120px 40px
+
+                quando clicar {
+                    estado.vendas = [10, 30]
+                }
+            }
+
+            botão semana3 {
+
+                texto: "Semana 3"
+
+                tamanho: 120px 40px
+
+                quando clicar {
+                    estado.vendas = [10, 30, 25]
+                }
+            }
+        }
+
+        texto dica {
+
+            conteúdo: "Os gráficos leem listas do estado (ex. [10, 25, 35])."
+
+            fonte: 11px
+
+            cor: "#9aa0b4"
+        }
+    }
+}

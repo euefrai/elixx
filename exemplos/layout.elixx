@@ -1,0 +1,151 @@
+# ELiXX — Layout e componentes (Fase 04). Executar: elixx executar exemplos/layout.elixx
+# Filhos de linha/coluna/grade/pilha sem posição são arranjados sozinhos.
+# Redimensione a janela: % e layout recalculam.
+
+janela principal {
+
+    titulo: "Layout ELiXX"
+
+    tamanho: 760px 600px
+
+    fundo: "#14161f"
+
+    coluna pagina {
+
+        posição: 16px 16px
+
+        tamanho: 728px 568px
+
+        espacamento: 12px
+
+        texto titulo {
+
+            conteúdo: "Layout sem posição manual"
+
+            fonte: 16px
+
+            cor: "#e6e8f0"
+        }
+
+        linha botoes {
+
+            espacamento: 10px
+
+            botão um {
+
+                texto: "Um"
+
+                tamanho: 120px 40px
+
+                quando clicar {
+                    mostrar("um!")
+                }
+            }
+
+            botão dois {
+
+                texto: "Dois"
+
+                tamanho: 120px 40px
+
+                quando clicar {
+                    mostrar("dois!")
+                }
+            }
+
+            botão tres {
+
+                texto: "Três"
+
+                tamanho: 120px 40px
+
+                quando clicar {
+                    mostrar("três!")
+                }
+            }
+        }
+
+        separador div {
+
+            largura: 100%
+        }
+
+        grade cartoes {
+
+            colunas: 2
+
+            espacamento: 12px
+
+            cartao a {
+
+                tamanho: 340px 90px
+
+                fundo: "#1a1d29"
+
+                texto ta {
+
+                    conteúdo: "Cartão A (grade)"
+
+                    posição: 12px 12px
+
+                    fonte: 12px
+
+                    cor: "#e6e8f0"
+                }
+            }
+
+            cartao b {
+
+                tamanho: 340px 90px
+
+                fundo: "#1a1d29"
+
+                texto tb {
+
+                    conteúdo: "Cartão B (grade)"
+
+                    posição: 12px 12px
+
+                    fonte: 12px
+
+                    cor: "#e6e8f0"
+                }
+            }
+        }
+
+        texto subtitulo {
+
+            conteúdo: "Formulário (leitura chega na Fase 05)"
+
+            fonte: 13px
+
+            cor: "#9aa0b4"
+        }
+
+        entrada nome {
+
+            texto: "digite seu nome"
+
+            largura: 300px
+        }
+
+        checkbox novidades {
+
+            texto: "Receber novidades"
+        }
+
+        selecao turno {
+
+            opcoes: "manhã" "tarde" "noite"
+
+            largura: 200px
+        }
+
+        indicador rede_ok {
+
+            texto: "Rede"
+
+            origem: dados.sistema.rede.online
+        }
+    }
+}

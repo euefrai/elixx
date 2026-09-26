@@ -1,0 +1,103 @@
+# ELiXX — Navigation + Traversal (Fase 15: sabe por onde passar)
+# Chão A → Plataforma B → Torre C → Plataforma D. Diagnóstico via API
+# (rota/plano/debug): nada se move sozinho.
+# Executar: elixx executar exemplos/navigation.elixx
+
+janela cenario {
+    titulo: "Navigation"
+    tamanho: 800px 600px
+    fundo: "#14161f"
+
+    personagem Heroi {
+        posição: 100px 500px
+
+        parte corpo {
+            imagem: "exemplos/assets/logo.png"
+        }
+
+        capacidade andar
+        capacidade pular
+    }
+
+    item BotaFoguete {
+        categoria: "equipamento"
+        capacidade voar
+    }
+
+    item Corda {
+        categoria: "ferramenta"
+        capacidade descer
+    }
+
+    imagem chao_visual {
+        arquivo: "exemplos/assets/logo.png"
+        posição: 0px 550px
+        tamanho: 800px 50px
+    }
+
+    mundo Mundo {
+        tamanho: 2000px 1200px
+
+        chão chao_a {
+            posição: 0px 550px
+            tamanho: 800px 50px
+            visual: chao_visual
+        }
+
+        plataforma plat_b {
+            posição: 900px 400px
+            tamanho: 300px 30px
+        }
+
+        plataforma torre_c {
+            posição: 1300px 150px
+            tamanho: 200px 30px
+        }
+
+        plataforma plat_d {
+            posição: 1000px 500px
+            tamanho: 200px 30px
+        }
+
+        obstáculo rocha {
+            posição: 560px 410px
+            tamanho: 60px 20px
+        }
+
+        ponto saida {
+            posição: 1500px 165px
+        }
+
+        usar personagem Heroi
+        usar item BotaFoguete
+        usar item Corda
+    }
+
+    navegacao Rotas {
+        caminho chao_a -> plat_b {
+            modo: pular
+            custo: 2
+        }
+
+        caminho plat_b -> torre_c {
+            modo: voar
+            custo: 4
+            requer: voar
+        }
+
+        caminho plat_b -> plat_d {
+            modo: descer
+            custo: 1
+            requer: descer
+        }
+
+        caminho plat_b_borda_direita -> saida {
+            modo: andar
+        }
+    }
+
+    texto legenda {
+        texto: "Navigation: Chão A, Plataforma B, Torre C, Plataforma D"
+        posição: 20px 20px
+    }
+}

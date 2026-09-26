@@ -1,0 +1,5 @@
+# Dados dos produtos (lidos por dados/produtos.elixx).
+
+dados produtos {
+    arquivo: "dados/produtos.json"
+}

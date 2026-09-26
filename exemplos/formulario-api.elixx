@@ -1,0 +1,91 @@
+# ELiXX — Formulário → POST → resposta (Fase 06).
+# 1) Rode o servidor demo: python exemplos/servidor_demo.py
+# 2) Executar: elixx executar exemplos/formulario-api.elixx
+
+dados novo_usuario {
+    url: "http://127.0.0.1:8765/usuarios"
+    metodo: "POST"
+    tempo_limite: 5s
+
+    corpo {
+        nome: estado.nome
+        email: estado.email
+    }
+}
+
+estado {
+    nome: ""
+    email: ""
+}
+
+janela principal {
+
+    titulo: "Formulário API ELiXX"
+
+    tamanho: 640px 520px
+
+    fundo: "#14161f"
+
+    coluna pagina {
+
+        posição: 16px 16px
+
+        tamanho: 608px 488px
+
+        espacamento: 10px
+
+        texto titulo {
+
+            conteúdo: "Novo usuário (POST real)"
+
+            fonte: 16px
+
+            cor: "#e6e8f0"
+        }
+
+        entrada campo_nome {
+
+            ligado_a: estado.nome
+
+            largura: 400px
+        }
+
+        entrada campo_email {
+
+            ligado_a: estado.email
+
+            largura: 400px
+        }
+
+        botão enviar {
+
+            texto: "Enviar"
+
+            tamanho: 160px 44px
+
+            quando clicar {
+                sincronizar("novo_usuario")
+            }
+        }
+
+        texto resposta {
+
+            origem: estado.novo_usuario.valor
+
+            formato: "json"
+
+            fonte: 12px
+
+            cor: "#4ade80"
+        }
+
+        texto erro_api {
+
+            origem: estado.novo_usuario.erro
+
+            fonte: 12px
+
+            cor: "#f87171"
+        }
+    }
+}

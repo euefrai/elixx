@@ -1,0 +1,105 @@
+# ELiXX — Formulário com validação (Fase 08).
+# Executar: elixx executar exemplos/formulario.elixx
+# validar() lê o estado (ligado_a), escreve erros e libera o envio.
+
+estado {
+    nome: ""
+    email: ""
+    idade: 0
+}
+
+janela principal {
+
+    titulo: "Formulário ELiXX"
+
+    tamanho: 620px 560px
+
+    fundo: "#14161f"
+
+    coluna pagina {
+
+        posição: 16px 16px
+
+        tamanho: 588px 528px
+
+        espacamento: 10px
+
+        texto titulo {
+
+            conteúdo: "Cadastro (validação real)"
+
+            fonte: 16px
+
+            cor: "#e6e8f0"
+        }
+
+        formulario cadastro {
+
+            entrada campo_nome {
+
+                texto: "Nome"
+
+                ligado_a: estado.nome
+
+                obrigatorio: verdadeiro
+
+                min_caracteres: 3
+            }
+
+            entrada campo_email {
+
+                texto: "Email"
+
+                ligado_a: estado.email
+
+                obrigatorio: verdadeiro
+
+                validar: "email"
+            }
+
+            entrada campo_idade {
+
+                texto: "Idade"
+
+                ligado_a: estado.idade
+
+                validar: "numero"
+
+                min_valor: 0
+
+                max_valor: 130
+            }
+        }
+
+        botão checar {
+
+            texto: "Validar"
+
+            tamanho: 160px 40px
+
+            quando clicar {
+                validar("cadastro")
+            }
+        }
+
+        texto erros {
+
+            origem: estado.cadastro_erros
+
+            formato: "json"
+
+            fonte: 12px
+
+            cor: "#f87171"
+        }
+
+        texto valido {
+
+            origem: estado.cadastro_valido
+
+            fonte: 14px
+
+            cor: "#4ade80"
+        }
+    }
+}

@@ -1,0 +1,39 @@
+# 06 — Funções simples e precedência (Fase 09).
+# Executar: elixx executar exemplos/06_funcoes.elixx
+
+funcao total(preco, quantidade) {
+    retornar preco * quantidade
+}
+
+funcao maior(a, b) {
+    se a > b {
+        retornar a
+    }
+    retornar b
+}
+
+janela principal {
+    titulo: "Funções"
+
+    tamanho: 500px 320px
+
+    coluna pagina {
+        posição: 16px 16px
+
+        espacamento: 10px
+
+        texto conta {
+            origem: total(10, 3) + 2 * 4 - 10 % 3
+            formato: "inteiro"
+        }
+
+        texto maximo {
+            origem: maior(7, 42)
+            formato: "inteiro"
+        }
+
+        texto logico {
+            origem: 2 + 3 * 4 == 14 e verdadeiro
+        }
+    }
+}

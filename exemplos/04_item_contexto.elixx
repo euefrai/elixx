@@ -1,0 +1,34 @@
+# 04 — Contexto de item: item.nome, item.id, item.indice (Fase 09).
+# Executar: elixx executar exemplos/04_item_contexto.elixx
+
+janela principal {
+    titulo: "Contexto de item"
+
+    tamanho: 560px 420px
+
+    coluna pagina {
+        posição: 16px 16px
+
+        espacamento: 10px
+
+        lista produtos {
+            origem: dados.produtos.valor
+            chave: item.id
+            tamanho: 400px 220px
+
+            modelo {
+                texto lin {
+                    origem: item.nome
+                }
+
+                texto posicao {
+                    origem: item.indice
+                }
+            }
+        }
+    }
+}
+
+dados produtos {
+    arquivo: "dados-demo/produtos.json"
+}

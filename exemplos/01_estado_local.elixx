@@ -1,0 +1,41 @@
+# 01 — Estado local: cada instância tem o seu (Fase 09).
+# Executar: elixx executar exemplos/01_estado_local.elixx
+
+componente Contador {
+    estado {
+        valor: 0
+    }
+
+    corpo {
+        texto rotulo {
+            origem: local.valor
+            formato: "inteiro"
+        }
+
+        botão mais {
+            texto: "+1"
+
+            quando clicar {
+                local.valor += 1
+            }
+        }
+    }
+}
+
+janela principal {
+    titulo: "Estado local"
+
+    tamanho: 500px 300px
+
+    coluna pagina {
+        posição: 16px 16px
+
+        espacamento: 12px
+
+        Contador contador_a {
+        }
+
+        Contador contador_b {
+        }
+    }
+}

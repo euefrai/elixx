@@ -1,0 +1,93 @@
+# ELiXX — Imagens, SVG e ícones (Fase 07).
+# Executar: elixx executar exemplos/imagem.elixx
+
+janela principal {
+
+    titulo: "Imagens ELiXX"
+
+    tamanho: 700px 500px
+
+    fundo: "#14161f"
+
+    coluna pagina {
+
+        posição: 16px 16px
+
+        tamanho: 668px 468px
+
+        espacamento: 12px
+
+        texto titulo {
+
+            conteúdo: "PNG local + SVG + ícones embutidos"
+
+            fonte: 16px
+
+            cor: "#e6e8f0"
+        }
+
+        linha topo {
+
+            espacamento: 16px
+
+            imagem logo {
+
+                arquivo: "assets/logo.png"
+
+                tamanho: 128px 128px
+            }
+
+            icone disquete {
+
+                nome: "salvar"
+
+                tamanho: 48px 48px
+
+                cor: "#7aa2ff"
+            }
+
+            icone lupa {
+
+                nome: "pesquisar"
+
+                tamanho: 48px 48px
+
+                cor: "#4ade80"
+            }
+        }
+
+        texto rot_svg {
+
+            conteúdo: "SVG de arquivo (subconjunto seguro):"
+
+            fonte: 12px
+
+            cor: "#9aa0b4"
+        }
+
+        imagem disquete_arquivo {
+
+            arquivo: "assets/salvar.svg"
+
+            tamanho: 64px 64px
+        }
+
+        texto rot_reserva {
+
+            conteúdo: "Arquivo quebrado usa a reserva:"
+
+            fonte: 12px
+
+            cor: "#9aa0b4"
+        }
+
+        imagem quebrada {
+
+            arquivo: "assets/nao-existe.png"
+
+            reserva: "assets/logo.png"
+
+            tamanho: 64px 64px
+        }
+    }
+}

@@ -1,0 +1,417 @@
+# ELiXX — Aplicação completa (Fase 08): tema, telas, form, tabela,
+// modal, abas, dados locais, gráfico, imagem, animação. Sem internet.
+
+estado {
+    aba: 0
+    nome: ""
+    email: ""
+}
+
+tema escuro {
+    cores {
+        fundo: "#14161f"
+        superficie: "#1a1d29"
+        texto: "#e6e8f0"
+        apagado: "#9aa0b4"
+        destaque: "#4ade80"
+    }
+
+    tamanhos {
+        titulo: 20px
+        normal: 13px
+    }
+}
+
+dados usuarios_arq {
+    arquivo: "dados-demo/usuarios.json"
+}
+
+tela dashboard {
+
+    titulo: "App — Dashboard"
+
+    tamanho: 960px 640px
+
+    tema: "escuro"
+
+    fundo: tema.fundo
+
+    inicial: verdadeiro
+
+    animação boas_vindas {
+        alvo: cartao_cpu
+        opacidade: 0 → 1
+        duração: 600ms
+        movimento: suave
+    }
+
+    menu topo {
+
+        posição: 0px 0px
+
+        tamanho: 960px 44px
+
+        fundo: tema.superficie
+
+        botão m_dash {
+
+            texto: "Dashboard"
+
+            quando clicar {
+                ir("dashboard")
+            }
+        }
+
+        botão m_users {
+
+            texto: "Usuários"
+
+            quando clicar {
+                ir("usuarios")
+            }
+        }
+
+        botão m_novo {
+
+            texto: "Novo"
+
+            quando clicar {
+                ir("novo")
+            }
+        }
+
+        botão m_tema {
+
+            texto: "Tema claro"
+
+            quando clicar {
+                usar_tema("claro")
+            }
+        }
+    }
+
+    cartao cartao_cpu {
+
+        posição: 16px 60px
+
+        tamanho: 280px 110px
+
+        fundo: tema.superficie
+
+        texto rot {
+
+            conteúdo: "CPU"
+
+            posição: 12px 8px
+
+            fonte: tema.normal
+
+            cor: tema.apagado
+        }
+
+        texto val {
+
+            origem: dados.sistema.cpu
+
+            formato: "percentual"
+
+            posição: 12px 30px
+
+            fonte: tema.titulo
+
+            cor: tema.texto
+        }
+    }
+
+    grafico hist {
+
+        origem: dados.sistema.cpu
+
+        texto: "CPU"
+
+        posição: 312px 60px
+
+        tamanho: 400px 150px
+
+        cor: tema.destaque
+    }
+
+    abas secoes {
+
+        posição: 16px 230px
+
+        tamanho: 700px 330px
+
+        ligado_a: estado.aba
+
+        aba geral {
+
+            texto: "Geral"
+
+            texto bemvindo {
+
+                conteúdo: "Processos ativos agora:"
+
+                posição: 8px 8px
+
+                fonte: tema.normal
+
+                cor: tema.texto
+            }
+
+            texto nproc {
+
+                origem: dados.sistema.processos.quantidade
+
+                formato: "inteiro"
+
+                posição: 8px 36px
+
+                fonte: tema.titulo
+
+                cor: tema.texto
+            }
+        }
+
+        aba sobre {
+
+            texto: "Sobre"
+
+            texto info {
+
+                conteúdo: "App ELiXX com 3 telas, tema e dados."
+
+                posição: 8px 8px
+
+                fonte: tema.normal
+
+                cor: tema.texto
+            }
+
+            imagem logo {
+
+                arquivo: "assets/logo.png"
+
+                posição: 8px 44px
+
+                tamanho: 64px 64px
+            }
+        }
+    }
+}
+
+tela usuarios {
+
+    titulo: "App — Usuários"
+
+    tamanho: 960px 640px
+
+    tema: "escuro"
+
+    fundo: tema.fundo
+
+    texto titulo {
+
+        conteúdo: "Usuários (JSON local → tabela)"
+
+        posição: 16px 12px
+
+        fonte: tema.titulo
+
+        cor: tema.texto
+    }
+
+    tabela lista_usuarios {
+
+        origem: estado.usuarios_arq.valor.usuarios
+
+        posição: 16px 60px
+
+        tamanho: 700px 300px
+
+        colunas: "nome" "email" "ativo"
+    }
+
+    botão voltar_btn {
+
+        texto: "Voltar"
+
+        posição: 16px 400px
+
+        tamanho: 140px 40px
+
+        quando clicar {
+            voltar()
+        }
+    }
+
+    botão excluir_btn {
+
+        texto: "Excluir"
+
+        posição: 170px 400px
+
+        tamanho: 140px 40px
+
+        quando clicar {
+            abrir("confirmar")
+        }
+    }
+
+    modal confirmar {
+
+        titulo: "Confirmar"
+
+        tamanho: 360px 200px
+
+        fundo: tema.superficie
+
+        texto pergunta {
+
+            conteúdo: "Deseja realmente excluir?"
+
+            posição: 20px 20px
+
+            fonte: tema.normal
+
+            cor: tema.texto
+        }
+
+        botão cancela {
+
+            texto: "Cancelar"
+
+            posição: 20px 120px
+
+            tamanho: 130px 40px
+
+            quando clicar {
+                fechar("confirmar")
+            }
+        }
+
+        botão exclui {
+
+            texto: "Excluir"
+
+            posição: 170px 120px
+
+            tamanho: 130px 40px
+
+            quando clicar {
+                fechar("confirmar")
+                mostrar("excluído (demonstração)")
+            }
+        }
+    }
+}
+
+tela novo {
+
+    titulo: "App — Novo"
+
+    tamanho: 960px 640px
+
+    tema: "escuro"
+
+    fundo: tema.fundo
+
+    texto titulo {
+
+        conteúdo: "Novo usuário (validação real)"
+
+        posição: 16px 12px
+
+        fonte: tema.titulo
+
+        cor: tema.texto
+    }
+
+    formulario cadastro {
+
+        entrada campo_nome {
+
+            texto: "Nome"
+
+            posição: 16px 70px
+
+            largura: 300px
+
+            ligado_a: estado.nome
+
+            obrigatorio: verdadeiro
+
+            min_caracteres: 3
+        }
+
+        entrada campo_email {
+
+            texto: "Email"
+
+            posição: 16px 130px
+
+            largura: 300px
+
+            ligado_a: estado.email
+
+            obrigatorio: verdadeiro
+
+            validar: "email"
+        }
+    }
+
+    botão enviar_btn {
+
+        texto: "Validar e voltar"
+
+        posição: 16px 220px
+
+        tamanho: 180px 44px
+
+        quando clicar {
+            validar("cadastro")
+            ir("usuarios")
+        }
+    }
+
+    texto erros {
+
+        origem: estado.cadastro_erros
+
+        formato: "json"
+
+        posição: 16px 290px
+
+        fonte: tema.normal
+
+        cor: "#f87171"
+    }
+
+    botão voltar_btn {
+
+        texto: "Voltar"
+
+        posição: 16px 360px
+
+        tamanho: 140px 40px
+
+        quando clicar {
+            voltar()
+        }
+    }
+}
+
+tema claro {
+    cores {
+        fundo: "#f2f3f7"
+        superficie: "#ffffff"
+        texto: "#1a1d29"
+        apagado: "#5b6070"
+        destaque: "#1d4ed8"
+    }
+
+    tamanhos {
+        titulo: 20px
+        normal: 13px
+    }
+}

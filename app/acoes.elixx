@@ -1,0 +1,6 @@
+# Ações reutilizáveis dos produtos.
+
+acao excluir(id) {
+    estado.ultimo_excluido = id
+    mostrar(id)
+}

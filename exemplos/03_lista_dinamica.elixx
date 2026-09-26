@@ -1,0 +1,37 @@
+# 03 — Lista dinâmica: coleção vira N itens (Fase 09).
+# Executar: elixx executar exemplos/03_lista_dinamica.elixx
+
+estado {
+    nomes: ["Ana", "Beto"]
+}
+
+janela principal {
+    titulo: "Lista dinâmica"
+
+    tamanho: 500px 400px
+
+    coluna pagina {
+        posição: 16px 16px
+
+        espacamento: 10px
+
+        lista usuarios {
+            origem: estado.nomes
+            tamanho: 300px 200px
+
+            modelo {
+                texto nome {
+                    origem: item
+                }
+            }
+        }
+
+        botão adicionar {
+            texto: "Adicionar Carlos"
+
+            quando clicar {
+                estado.nomes = ["Ana", "Beto", "Carlos"]
+            }
+        }
+    }
+}

@@ -1,0 +1,135 @@
+# ELiXX — Temas claro/escuro (Fase 08).
+# Executar: elixx executar exemplos/temas.elixx
+# `cor: tema.destaque` evita hex espalhado; usar_tema troca sem reconstruir.
+
+tema escuro {
+    cores {
+        fundo: "#14161f"
+        superficie: "#1a1d29"
+        texto: "#e6e8f0"
+        apagado: "#9aa0b4"
+        destaque: "#4ade80"
+    }
+
+    tamanhos {
+        pequeno: 11px
+        normal: 14px
+        grande: 22px
+    }
+
+    espacos {
+        normal: 12px
+    }
+}
+
+tema claro {
+    cores {
+        fundo: "#f2f3f7"
+        superficie: "#ffffff"
+        texto: "#1a1d29"
+        apagado: "#5b6070"
+        destaque: "#1d4ed8"
+    }
+
+    tamanhos {
+        pequeno: 11px
+        normal: 14px
+        grande: 22px
+    }
+
+    espacos {
+        normal: 12px
+    }
+}
+
+janela principal {
+
+    titulo: "Temas ELiXX"
+
+    tamanho: 620px 440px
+
+    tema: "escuro"
+
+    fundo: tema.fundo
+
+    coluna pagina {
+
+        posição: 16px 16px
+
+        espacamento: 12px
+
+        texto titulo {
+
+            conteúdo: "Dois temas, zero hex no código"
+
+            fonte: tema.grande
+
+            cor: tema.texto
+        }
+
+        cartao cartao1 {
+
+            tamanho: 400px 120px
+
+            fundo: tema.superficie
+
+            texto rot {
+
+                conteúdo: "Cartão temático"
+
+                posição: 12px 12px
+
+                fonte: tema.normal
+
+                cor: tema.texto
+            }
+
+            texto detalhe {
+
+                conteúdo: "cores e tamanhos vêm do tema"
+
+                posição: 12px 48px
+
+                fonte: tema.pequeno
+
+                cor: tema.apagado
+            }
+        }
+
+        linha botoes {
+
+            espacamento: 10px
+
+            botão claro_btn {
+
+                texto: "Tema claro"
+
+                tamanho: 140px 40px
+
+                quando clicar {
+                    usar_tema("claro")
+                }
+            }
+
+            botão escuro_btn {
+
+                texto: "Tema escuro"
+
+                tamanho: 140px 40px
+
+                quando clicar {
+                    usar_tema("escuro")
+                }
+            }
+        }
+
+        texto dica {
+
+            conteúdo: "A troca reaproveita a Cena (sem reconstruir)."
+
+            fonte: tema.pequeno
+
+            cor: tema.destaque
+        }
+    }
+}

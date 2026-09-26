@@ -1,0 +1,204 @@
+# ELiXX — Mini CRUD (Fase 08) via servidor demo local.
+# 1) Rode: python exemplos/servidor_demo.py
+# 2) Executar: elixx executar exemplos/crud.elixx
+# Listar (GET) → criar (POST) → editar (PUT) → excluir (DELETE).
+
+dados usuarios {
+    url: "http://127.0.0.1:8765/usuarios"
+    metodo: "GET"
+    tempo_limite: 5s
+}
+
+dados criar_usuario {
+    url: "http://127.0.0.1:8765/usuarios"
+    metodo: "POST"
+    tempo_limite: 5s
+
+    corpo {
+        nome: estado.nome
+    }
+}
+
+dados editar_usuario {
+    url: "http://127.0.0.1:8765/usuarios/1"
+    metodo: "PUT"
+    tempo_limite: 5s
+
+    corpo {
+        nome: estado.nome
+    }
+}
+
+dados excluir_usuario {
+    url: "http://127.0.0.1:8765/usuarios/1"
+    metodo: "DELETE"
+    tempo_limite: 5s
+}
+
+estado {
+    nome: "Novo"
+}
+
+janela principal {
+
+    titulo: "CRUD ELiXX"
+
+    tamanho: 700px 600px
+
+    fundo: "#14161f"
+
+    coluna pagina {
+
+        posição: 16px 16px
+
+        tamanho: 668px 568px
+
+        espacamento: 10px
+
+        texto titulo {
+
+            conteúdo: "Usuários (CRUD real no demo)"
+
+            fonte: 16px
+
+            cor: "#e6e8f0"
+        }
+
+        tabela tabela_usuarios {
+
+            origem: estado.usuarios.valor
+
+            tamanho: 620px 220px
+
+            colunas: "id" "nome" "ativo"
+        }
+
+        linha form {
+
+            espacamento: 8px
+
+            entrada campo_nome {
+
+                ligado_a: estado.nome
+
+                largura: 280px
+            }
+
+            botão btn_criar {
+
+                texto: "Criar (POST)"
+
+                tamanho: 150px 40px
+
+                quando clicar {
+                    sincronizar("criar_usuario")
+                }
+            }
+        }
+
+        linha acoes {
+
+            espacamento: 8px
+
+            botão recarregar {
+
+                texto: "Recarregar"
+
+                tamanho: 150px 40px
+
+                quando clicar {
+                    sincronizar("usuarios")
+                }
+            }
+
+            botão btn_editar {
+
+                texto: "Editar 1 (PUT)"
+
+                tamanho: 150px 40px
+
+                quando clicar {
+                    sincronizar("editar_usuario")
+                }
+            }
+
+            botão btn_excluir {
+
+                texto: "Excluir 1"
+
+                tamanho: 150px 40px
+
+                quando clicar {
+                    abrir("confirmar")
+                }
+            }
+        }
+
+        texto resposta {
+
+            origem: estado.criar_usuario.valor
+
+            formato: "json"
+
+            fonte: 12px
+
+            cor: "#4ade80"
+        }
+
+        texto erro_api {
+
+            origem: estado.usuarios.erro
+
+            fonte: 12px
+
+            cor: "#f87171"
+        }
+    }
+
+    modal confirmar {
+
+        titulo: "Excluir"
+
+        tamanho: 360px 190px
+
+        fundo: "#1a1d29"
+
+        texto pergunta {
+
+            conteúdo: "Excluir o usuário 1?"
+
+            posição: 20px 20px
+
+            fonte: 13px
+
+            cor: "#e6e8f0"
+        }
+
+        botão btn_sim {
+
+            texto: "Sim, excluir"
+
+            posição: 20px 110px
+
+            tamanho: 140px 40px
+
+            quando clicar {
+                fechar("confirmar")
+                sincronizar("excluir_usuario")
+            }
+        }
+
+        botão btn_nao {
+
+            texto: "Cancelar"
+
+            posição: 180px 110px
+
+            tamanho: 120px 40px
+
+            quando clicar {
+                fechar("confirmar")
+            }
+        }
+    }
+}

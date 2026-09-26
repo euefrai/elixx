@@ -1,0 +1,5 @@
+# Funções simples dos produtos.
+
+funcao etiqueta(preco) {
+    retornar preco * 1.1
+}

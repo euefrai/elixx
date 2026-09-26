@@ -1,0 +1,12 @@
+# Módulo extra (importado por 07_modulos.elixx).
+
+componente BotaoExtra {
+    propriedade texto: "Extra"
+
+    corpo {
+        botão base {
+            texto: param.texto
+            tamanho: 180px 40px
+        }
+    }
+}

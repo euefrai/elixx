@@ -1,0 +1,129 @@
+# ELiXX — Áudio real (Fase 07, WAV via winsound no Windows).
+# Executar: elixx executar exemplos/audio.elixx
+
+estado {
+    volume_atual: 100
+}
+
+janela principal {
+
+    titulo: "Áudio ELiXX"
+
+    tamanho: 560px 420px
+
+    fundo: "#14161f"
+
+    coluna pagina {
+
+        posição: 16px 16px
+
+        tamanho: 528px 388px
+
+        espacamento: 10px
+
+        texto titulo {
+
+            conteúdo: "Som WAV de verdade (sem travar)"
+
+            fonte: 16px
+
+            cor: "#e6e8f0"
+        }
+
+        audio musica {
+
+            arquivo: "assets/som.wav"
+
+            volume: 100
+        }
+
+        linha controles {
+
+            espacamento: 8px
+
+            botão tocar {
+
+                texto: "Tocar"
+
+                tamanho: 100px 40px
+
+                quando clicar {
+                    reproduzir("musica")
+                }
+            }
+
+            botão pausar_btn {
+
+                texto: "Pausar"
+
+                tamanho: 100px 40px
+
+                quando clicar {
+                    pausar("musica")
+                }
+            }
+
+            botão seguir {
+
+                texto: "Continuar"
+
+                tamanho: 100px 40px
+
+                quando clicar {
+                    continuar("musica")
+                }
+            }
+
+            botão parar_btn {
+
+                texto: "Parar"
+
+                tamanho: 100px 40px
+
+                quando clicar {
+                    parar("musica")
+                }
+            }
+        }
+
+        linha vol {
+
+            espacamento: 8px
+
+            botão baixo {
+
+                texto: "-"
+
+                tamanho: 60px 40px
+
+                quando clicar {
+                    volume("musica", 30)
+                    estado.volume_atual = 30
+                }
+            }
+
+            botão alto {
+
+                texto: "+"
+
+                tamanho: 60px 40px
+
+                quando clicar {
+                    volume("musica", 100)
+                    estado.volume_atual = 100
+                }
+            }
+
+            texto val_vol {
+
+                origem: estado.volume_atual
+
+                formato: "inteiro"
+
+                fonte: 16px
+
+                cor: "#e6e8f0"
+            }
+        }
+    }
+}

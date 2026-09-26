@@ -1,0 +1,30 @@
+# 07 — Módulos e import (Fase 09).
+# Executar: elixx executar exemplos/07_modulos.elixx
+# (usa exemplos/modulos_demo/ ao lado)
+
+importar modulos_demo.base
+importar modulos_demo.extra
+
+janela principal {
+    titulo: "Módulos"
+
+    tamanho: 500px 300px
+
+    coluna pagina {
+        posição: 16px 16px
+
+        espacamento: 12px
+
+        texto info {
+            origem: estado.veio_de
+        }
+
+        CartaoSimples c {
+            titulo: "Via import"
+        }
+
+        BotaoExtra b {
+            texto: "Também importado"
+        }
+    }
+}

@@ -1,0 +1,125 @@
+# ELiXX — Items + Capabilities (Fase 14: sabe o que pode, não decide)
+# Heroi, Corda, BotaFoguete, Arma, Torre, Plataforma. Consultas via API
+# (pode/tem_capacidade): nada é executado automaticamente.
+# Executar: elixx executar exemplos/items-capabilities.elixx
+
+janela palco {
+    titulo: "Items + Capabilities"
+    tamanho: 800px 600px
+    fundo: "#14161f"
+
+    item Corda {
+        categoria: "ferramenta"
+        tags: "alcance" "apoio"
+        capacidade prender
+        capacidade descer {
+            parametro alvo
+        }
+        capacidade alcançar
+    }
+
+    item BotaFoguete {
+        categoria: "equipamento"
+        tags: "voo" "propulsao"
+        slot: "pes"
+        imagem: "exemplos/assets/logo.png"
+        capacidade voar {
+            descricao: "voar com propulsão"
+            requer_equipado: "BotaFoguete"
+        }
+        capacidade pairar {
+            requer_equipado: "BotaFoguete"
+        }
+        capacidade subir {
+            requer_equipado: "BotaFoguete"
+        }
+        capacidade descer {
+            requer_equipado: "BotaFoguete"
+        }
+    }
+
+    item Arma {
+        categoria: "arma"
+        slot: "mao_direita"
+        anexo: "mao_direita"
+        capacidade mirar {
+            parametro alvo
+            requer_equipado: "Arma"
+        }
+        capacidade apontar {
+            parametro alvo
+        }
+        capacidade ameaçar
+    }
+
+    personagem Heroi {
+        posição: 200px 400px
+        possui: "Corda"
+        equipa: "BotaFoguete"
+
+        parte corpo {
+            imagem: "exemplos/assets/logo.png"
+        }
+
+        parte mao_direita {
+            posição: 30px 0px
+        }
+
+        capacidade andar
+        capacidade pular
+        capacidade pegar {
+            parametro alvo
+            requer_proximo: "alvo"
+            raio: 250px
+        }
+    }
+
+    imagem corda_visual {
+        arquivo: "exemplos/assets/logo.png"
+        posição: 350px 450px
+        tamanho: 30px 30px
+    }
+
+    imagem torre_visual {
+        arquivo: "exemplos/assets/logo.png"
+        posição: 600px 100px
+        tamanho: 80px 300px
+    }
+
+    mundo Mundo {
+        tamanho: 2000px 1200px
+
+        plataforma base {
+            posição: 100px 500px
+            tamanho: 600px 30px
+        }
+
+        plataforma topo_torre {
+            posição: 580px 380px
+            tamanho: 120px 20px
+        }
+
+        ponto destino {
+            posição: 640px 300px
+        }
+
+        objeto corda_no_mundo {
+            posição: 350px 450px
+            tamanho: 30px 30px
+            categoria: "ferramenta"
+            visual: corda_visual
+        }
+
+        usar personagem Heroi
+        usar item Corda {
+            posição: 250px 420px
+        }
+        usar item BotaFoguete como botas_hero
+        usar item Arma
+    }
+
+    texto quadro_caps {
+        texto: "Capacidades do Heroi"
+        posição: 20px 20px
+    }
+}

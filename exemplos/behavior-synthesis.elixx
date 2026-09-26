@@ -1,0 +1,149 @@
+# ELiXX — Behavior Synthesis (Fase 17: movimento + corpo sincronizados)
+# Jornada: parado → andar → borda → pular → pousar → andar → destino,
+# com poses, expressão e gesto sobre o MotionPlan do F16.
+# Executar: elixx executar exemplos/behavior-synthesis.elixx
+
+janela jornada {
+    titulo: "Behavior Synthesis"
+    tamanho: 800px 600px
+    fundo: "#14161f"
+
+    personagem Heroi {
+        posição: 50px 500px
+
+        parte cabeca {
+            posição: 20px 0px
+            imagem: "exemplos/assets/logo.png"
+            escala: 0.6
+        }
+
+        parte corpo {
+            imagem: "exemplos/assets/logo.png"
+        }
+
+        parte braco_esquerdo {
+            posição: 0px 10px
+            pivô: 5px 5px
+        }
+
+        parte braco_direito {
+            posição: 40px 10px
+            pivô: 5px 5px
+        }
+
+        parte perna_esquerda {
+            posição: 10px 40px
+        }
+
+        parte perna_direita {
+            posição: 30px 40px
+        }
+
+        capacidade andar
+        capacidade pular
+        capacidade voar
+
+        capacidade andar
+        capacidade pular
+        capacidade voar
+
+        pose repouso {
+            braco_esquerdo:
+                rotação: 0deg
+            braco_direito:
+                rotação: 0deg
+            cabeca:
+                rotação: 0deg
+        }
+
+        pose andar {
+            braco_esquerdo:
+                rotação: 20deg
+            braco_direito:
+                rotação: -20deg
+        }
+
+        pose pulo {
+            braco_esquerdo:
+                rotação: 45deg
+            braco_direito:
+                rotação: 45deg
+        }
+
+        expressao sorriso {
+            cabeca:
+                rotação: 5deg
+        }
+
+        expressao neutra {
+            cabeca:
+                rotação: 0deg
+        }
+    }
+
+    item Corda {
+        categoria: "ferramenta"
+        capacidade descer
+    }
+
+    mundo Mundo {
+        tamanho: 2000px 1200px
+
+        chão chao_a {
+            posição: 0px 550px
+            tamanho: 800px 50px
+        }
+
+        plataforma plat_baixa {
+            posição: 250px 420px
+            tamanho: 200px 30px
+        }
+
+        plataforma plat_alta {
+            posição: 550px 250px
+            tamanho: 200px 30px
+        }
+
+        obstáculo rocha {
+            posição: 300px 470px
+            tamanho: 40px 40px
+        }
+
+        ponto inicio {
+            posição: 50px 500px
+        }
+
+        ponto destino {
+            posição: 650px 250px
+        }
+
+        usar personagem Heroi
+        usar item Corda
+    }
+
+    navegacao Rota {
+        caminho inicio -> chao_a {
+            modo: andar
+        }
+
+        caminho chao_a -> plat_baixa {
+            modo: pular
+            custo: 2
+        }
+
+        caminho plat_baixa -> plat_alta {
+            modo: voar
+            custo: 4
+            requer: voar
+        }
+
+        caminho plat_alta -> destino {
+            modo: andar
+        }
+    }
+
+    texto legenda {
+        texto: "Behavior Synthesis: andar, pular, voar"
+        posição: 20px 20px
+    }
+}

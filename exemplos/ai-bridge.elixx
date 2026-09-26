@@ -1,0 +1,142 @@
+# ELiXX — AI Bridge (Fase 18: intenção vira plano, plano vira movimento)
+# A intenção {"tipo": "mover", "personagem": "Heroi", "destino": "Torre"}
+# é criada pelo agente (ver teste_demo_integrado_f13_f17 em espírito:
+# aqui a cena; a intenção viaja como dicionário validado).
+# Executar: elixx executar exemplos/ai-bridge.elixx
+
+janela cenario {
+    titulo: "AI Bridge"
+    tamanho: 800px 600px
+    fundo: "#14161f"
+
+    personagem Heroi {
+        posição: 100px 500px
+
+        parte corpo {
+            imagem: "exemplos/assets/logo.png"
+        }
+
+        parte cabeca {
+            posição: 20px 0px
+        }
+
+        parte braco {
+            posição: 20px 0px
+        }
+
+        capacidade andar
+        capacidade pular
+        capacidade voar
+
+        pose repouso {
+            braco:
+                rotação: 0deg
+            cabeca:
+                rotação: 0deg
+        }
+
+        pose andar {
+            braco:
+                rotação: 20deg
+        }
+
+        expressao feliz {
+            cabeca:
+                rotação: 10deg
+        }
+    }
+
+    item BotaFoguete {
+        categoria: "equipamento"
+        capacidade voar
+    }
+
+    item Corda {
+        categoria: "ferramenta"
+        capacidade descer
+    }
+
+    mundo Mundo {
+        tamanho: 2000px 1200px
+
+        chão chao_a {
+            posição: 0px 550px
+            tamanho: 800px 50px
+        }
+
+        plataforma plat_b {
+            posição: 900px 400px
+            tamanho: 300px 30px
+        }
+
+        plataforma plat_alta {
+            posição: 1400px 150px
+            tamanho: 200px 30px
+        }
+
+        parede muro {
+            posição: 100px 100px
+            tamanho: 40px 80px
+        }
+
+        obstáculo rocha {
+            posição: 560px 410px
+            tamanho: 60px 20px
+        }
+
+        ponto Torre {
+            posição: 1500px 165px
+        }
+
+        ponto saida {
+            posição: 1500px 165px
+        }
+
+        ponto base {
+            posição: 100px 550px
+        }
+
+        usar personagem Heroi
+        usar item BotaFoguete
+        usar item Corda
+    }
+
+    navegacao Rotas {
+        caminho Heroi -> base {
+            modo: andar
+        }
+
+        caminho base -> chao_a {
+            modo: andar
+        }
+
+        caminho chao_a -> plat_b {
+            modo: pular
+            custo: 2
+        }
+
+        caminho plat_b -> plat_alta {
+            modo: voar
+            custo: 4
+            requer: voar
+        }
+
+        caminho plat_b_borda_direita -> saida {
+            modo: andar
+        }
+
+        caminho plat_alta -> saida {
+            modo: andar
+            custo: 100
+        }
+
+        caminho plat_alta -> Torre {
+            modo: andar
+        }
+    }
+
+    texto legenda {
+        texto: "AI Bridge: intenção → rota → movimento → comportamento"
+        posição: 20px 20px
+    }
+}

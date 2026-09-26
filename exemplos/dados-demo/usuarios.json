@@ -1,0 +1,7 @@
+{
+    "usuarios": [
+        {"nome": "Ana", "email": "ana@email.com", "ativo": true},
+        {"nome": "Beto", "email": "beto@email.com", "ativo": false},
+        {"nome": "Cid", "email": "cid@email.com", "ativo": true}
+    ]
+}

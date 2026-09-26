@@ -1,0 +1,15 @@
+janela principal {
+
+    titulo: "Minha primeira aplicação"
+
+    tamanho: 800px 600px
+
+    botão teste {
+
+        texto: "Olá ELiXX"
+
+        quando clicar {
+            mostrar("Olá, mundo!")
+        }
+    }
+}

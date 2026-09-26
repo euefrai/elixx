@@ -1,0 +1,91 @@
+# ELiXX — Character Core (Fase 12)
+# Personagem articulado: corpo, cabeça, braços, antebraços, mãos,
+# poses, transição por Motion, gesto, direção e opacidade.
+# Executar: elixx executar exemplos/character-core.elixx
+
+janela palco {
+    titulo: "Character Core"
+    tamanho: 800px 600px
+    fundo: "#14161f"
+
+    personagem Heroi {
+        posição: 300px 350px
+        opacidade: 90%
+        frente: "exemplos/assets/logo.png"
+
+        parte corpo {
+            imagem: "exemplos/assets/logo.png"
+            escala: 1.5
+        }
+
+        parte cabeca {
+            posição: 30px 10px
+            pivô: 50% 100%
+            imagem: "exemplos/assets/logo.png"
+            escala: 0.8
+        }
+
+        parte braco {
+            posição: 60px 0px
+            pivô: 10px 20px
+            junta: "ombro"
+            limite_min: 0deg
+            limite_max: 120deg
+            imagem: "exemplos/assets/logo.png"
+            escala: 0.7
+
+            parte antebraco {
+                posição: 40px 0px
+                pivô: 5px 10px
+                junta: "cotovelo"
+                limite_min: 0deg
+                limite_max: 145deg
+
+                parte mao {
+                    posição: 30px 0px
+                    escala: 0.5
+                }
+            }
+        }
+
+        pose repouso {
+            braco:
+                rotação: 0deg
+            antebraco:
+                rotação: 0deg
+            cabeca:
+                rotação: 0deg
+        }
+
+        pose acenando {
+            braco:
+                rotação: 45deg
+            antebraco:
+                rotação: 60deg
+            mao:
+                rotação: 15deg
+        }
+
+        expressao sorriso {
+            cabeca:
+                rotação: 5deg
+        }
+    }
+
+    animação entrar {
+        alvo: Heroi
+        posição: 100px 350px -> 300px 350px
+        duração: 2s
+        movimento: suave
+    }
+
+    animação acenar {
+        alvo: braco
+        rotação: 0deg -> 45deg
+        duração: 1s
+        movimento: suave
+        modo: ping_pong
+        repetir: 4
+        depois: entrar
+    }
+}

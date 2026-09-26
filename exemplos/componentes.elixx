@@ -1,0 +1,78 @@
+# ELiXX — Componentes reutilizáveis (Fase 08).
+# Executar: elixx executar exemplos/componentes.elixx
+# Defina uma vez com `componente`, use com `Nome instancia { ... }`.
+
+componente CartaoUsuario {
+    propriedade nome
+    propriedade email: "sem email"
+
+    corpo {
+        cartao base {
+            tamanho: 300px 110px
+            fundo: "#1a1d29"
+
+            texto rot_nome {
+                conteúdo: param.nome
+                posição: 12px 10px
+                fonte: 14px
+                cor: "#e6e8f0"
+            }
+
+            texto rot_email {
+                conteúdo: param.email
+                posição: 12px 44px
+                fonte: 12px
+                cor: "#9aa0b4"
+            }
+
+            botão ver {
+                texto: "Ver"
+
+                posição: 12px 68px
+
+                tamanho: 100px 32px
+
+                quando clicar {
+                    mostrar(param.nome)
+                }
+            }
+        }
+    }
+}
+
+janela principal {
+
+    titulo: "Componentes ELiXX"
+
+    tamanho: 700px 420px
+
+    fundo: "#14161f"
+
+    coluna pagina {
+
+        posição: 16px 16px
+
+        espacamento: 16px
+
+        texto titulo {
+
+            conteúdo: "Mesmo componente, dois usos"
+
+            fonte: 16px
+
+            cor: "#e6e8f0"
+        }
+
+        CartaoUsuario ana {
+
+            nome: "Ana"
+
+            email: "ana@email.com"
+        }
+
+        CartaoUsuario beto {
+
+            nome: "Beto"
+        }
+    }
+}

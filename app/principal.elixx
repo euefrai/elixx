@@ -1,0 +1,26 @@
+# Gerenciador de produtos (Fase 09): módulos + importa tudo aqui.
+# Executar: elixx executar app/principal.elixx
+
+importar componentes.produto_card
+importar telas.produtos
+importar dados.produtos
+importar acoes
+importar funcoes
+
+estado {
+    ultimo_excluido: 0
+}
+
+janela principal {
+    titulo: "Gerenciador"
+
+    tamanho: 720px 640px
+
+    coluna pagina {
+        posição: 8px 8px
+
+        texto aviso {
+            conteúdo: "Veja a tela de produtos no app real."
+        }
+    }
+}

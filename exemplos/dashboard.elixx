@@ -1,0 +1,929 @@
+# ELiXX SYSTEM DASHBOARD — painel nativo com dados reais da máquina.
+# Executar: elixx executar exemplos/dashboard.elixx
+# Dados: origem dados.sistema.* (camada elixx/dados, só stdlib, só leitura).
+# Estado (Fase 05): ciclos do vinculador, cliques e modo via bloco estado.
+
+estado {
+    atualizacoes: 0
+    cliques: 0
+    modo: "auto"
+}
+
+# Fase 06: JSON local como fonte (arquivo → estado → lista).
+dados avisos {
+    arquivo: "dados-demo/status.json"
+}
+
+janela principal {
+
+    titulo: "ELiXX System Dashboard"
+
+    tamanho: 1100px 700px
+
+    fundo: "#14161f"
+
+    quando aparecer {
+        esconder("pagina_sistema")
+        esconder("pagina_processos")
+        esconder("pagina_rede")
+        mostrar("Monitor iniciado — dados reais da máquina")
+    }
+
+    # Fase 03: entrada suave do cartão de CPU.
+    animação boas_vindas {
+        alvo: cartao_cpu
+        posição: 16px 90px → 16px 40px
+        duração: 700ms
+        movimento: suave
+    }
+
+    # ---------- topo ----------
+    painel topo {
+
+        posição: 0px 0px
+
+        tamanho: 1100px 56px
+
+        fundo: "#1a1d29"
+
+        texto titulo_app {
+
+            conteúdo: "ELiXX SYSTEM DASHBOARD"
+
+            posição: 16px 10px
+
+            fonte: 16px
+
+            cor: "#e6e8f0"
+        }
+
+        texto online {
+
+            conteúdo: "● ONLINE"
+
+            posição: 830px 12px
+
+            fonte: 12px
+
+            cor: "#4ade80"
+        }
+
+        texto relogio {
+
+            origem: dados.sistema.hora
+
+            posição: 950px 12px
+
+            fonte: 12px
+
+            cor: "#9aa0b4"
+        }
+    }
+
+    # ---------- menu lateral ----------
+    painel lateral {
+
+        posição: 0px 56px
+
+        tamanho: 168px 644px
+
+        fundo: "#1a1d29"
+
+        texto logo {
+
+            conteúdo: "ELiXX"
+
+            posição: 16px 8px
+
+            fonte: 20px
+
+            cor: "#7aa2ff"
+        }
+
+        # Fase 07: logo real + ícone embutido no menu.
+        imagem logo_img {
+
+            arquivo: "assets/logo.png"
+
+            posição: 20px 44px
+
+            tamanho: 48px 48px
+        }
+
+        icone menu_icon {
+
+            nome: "menu"
+
+            posição: 84px 52px
+
+            tamanho: 32px 32px
+
+            cor: "#9aa0b4"
+        }
+
+        botão nav_dashboard {
+
+            texto: "Dashboard"
+
+            posição: 12px 108px
+
+            tamanho: 144px 36px
+
+            quando clicar {
+                exibir("pagina_dashboard")
+                esconder("pagina_sistema")
+                esconder("pagina_processos")
+                esconder("pagina_rede")
+                mostrar("Página: Dashboard")
+            }
+        }
+
+        botão nav_sistema {
+
+            texto: "Sistema"
+
+            posição: 12px 152px
+
+            tamanho: 144px 36px
+
+            quando clicar {
+                exibir("pagina_sistema")
+                esconder("pagina_dashboard")
+                esconder("pagina_processos")
+                esconder("pagina_rede")
+                mostrar("Página: Sistema")
+            }
+        }
+
+        botão nav_processos {
+
+            texto: "Processos"
+
+            posição: 12px 196px
+
+            tamanho: 144px 36px
+
+            quando clicar {
+                exibir("pagina_processos")
+                esconder("pagina_dashboard")
+                esconder("pagina_sistema")
+                esconder("pagina_rede")
+                mostrar("Página: Processos")
+            }
+        }
+
+        botão nav_rede {
+
+            texto: "Rede"
+
+            posição: 12px 240px
+
+            tamanho: 144px 36px
+
+            quando clicar {
+                exibir("pagina_rede")
+                esconder("pagina_dashboard")
+                esconder("pagina_sistema")
+                esconder("pagina_processos")
+                mostrar("Página: Rede")
+            }
+        }
+
+        botão sair_btn {
+
+            texto: "Sair"
+
+            posição: 12px 590px
+
+            tamanho: 144px 36px
+
+            quando clicar {
+                sair()
+            }
+        }
+    }
+
+    # ---------- página: dashboard ----------
+    painel pagina_dashboard {
+
+        posição: 168px 56px
+
+        tamanho: 932px 644px
+
+        texto secao_status {
+
+            conteúdo: "STATUS DO SISTEMA"
+
+            posição: 16px 8px
+
+            fonte: 13px
+
+            cor: "#9aa0b4"
+        }
+
+        cartao cartao_cpu {
+
+            posição: 16px 40px
+
+            tamanho: 280px 112px
+
+            fundo: "#1a1d29"
+
+            texto rot_cpu {
+
+                conteúdo: "CPU"
+
+                posição: 12px 6px
+
+                fonte: 11px
+
+                cor: "#9aa0b4"
+            }
+
+            texto val_cpu {
+
+                origem: dados.sistema.cpu
+
+                formato: "percentual"
+
+                posição: 12px 26px
+
+                fonte: 28px
+
+                cor: "#e6e8f0"
+            }
+
+            barra bar_cpu {
+
+                origem: dados.sistema.cpu
+
+                posição: 12px 76px
+
+                tamanho: 220px 12px
+            }
+        }
+
+        cartao cartao_ram {
+
+            posição: 312px 40px
+
+            tamanho: 280px 112px
+
+            fundo: "#1a1d29"
+
+            texto rot_ram {
+
+                conteúdo: "RAM"
+
+                posição: 12px 6px
+
+                fonte: 11px
+
+                cor: "#9aa0b4"
+            }
+
+            texto val_ram {
+
+                origem: dados.sistema.ram.percentual
+
+                formato: "percentual"
+
+                posição: 12px 26px
+
+                fonte: 28px
+
+                cor: "#e6e8f0"
+            }
+
+            barra bar_ram {
+
+                origem: dados.sistema.ram.percentual
+
+                posição: 12px 76px
+
+                tamanho: 220px 12px
+            }
+        }
+
+        cartao cartao_disco {
+
+            posição: 608px 40px
+
+            tamanho: 280px 112px
+
+            fundo: "#1a1d29"
+
+            texto rot_disco {
+
+                conteúdo: "SSD"
+
+                posição: 12px 6px
+
+                fonte: 11px
+
+                cor: "#9aa0b4"
+            }
+
+            texto val_disco {
+
+                origem: dados.sistema.disco.percentual
+
+                formato: "percentual"
+
+                posição: 12px 26px
+
+                fonte: 28px
+
+                cor: "#e6e8f0"
+            }
+
+            barra bar_disco {
+
+                origem: dados.sistema.disco.percentual
+
+                posição: 12px 76px
+
+                tamanho: 220px 12px
+            }
+        }
+
+        grafico hist_cpu {
+
+            origem: dados.sistema.cpu
+
+            formato: "percentual"
+
+            texto: "CPU — histórico"
+
+            posição: 16px 170px
+
+            tamanho: 560px 150px
+
+            cor: "#4ade80"
+        }
+
+        painel atividade {
+
+            posição: 592px 170px
+
+            tamanho: 296px 250px
+
+            fundo: "#1a1d29"
+
+            texto rot_ativ {
+
+                conteúdo: "ATIVIDADE"
+
+                posição: 12px 6px
+
+                fonte: 11px
+
+                cor: "#9aa0b4"
+            }
+
+            texto lab_proc {
+
+                conteúdo: "Processos ativos:"
+
+                posição: 12px 36px
+
+                fonte: 11px
+
+                cor: "#9aa0b4"
+            }
+
+            texto val_proc {
+
+                origem: dados.sistema.processos.quantidade
+
+                formato: "inteiro"
+
+                posição: 180px 32px
+
+                fonte: 16px
+
+                cor: "#e6e8f0"
+            }
+
+            texto lab_down {
+
+                conteúdo: "Recebidos:"
+
+                posição: 12px 70px
+
+                fonte: 11px
+
+                cor: "#9aa0b4"
+            }
+
+            texto val_down {
+
+                origem: dados.sistema.rede.recebidos
+
+                formato: "gb"
+
+                posição: 180px 66px
+
+                fonte: 16px
+
+                cor: "#e6e8f0"
+            }
+
+            texto lab_up {
+
+                conteúdo: "Enviados:"
+
+                posição: 12px 104px
+
+                fonte: 11px
+
+                cor: "#9aa0b4"
+            }
+
+            texto val_up {
+
+                origem: dados.sistema.rede.enviados
+
+                formato: "mb"
+
+                posição: 180px 100px
+
+                fonte: 16px
+
+                cor: "#e6e8f0"
+            }
+
+            texto lab_ram2 {
+
+                conteúdo: "RAM usada:"
+
+                posição: 12px 138px
+
+                fonte: 11px
+
+                cor: "#9aa0b4"
+            }
+
+            texto val_ram2 {
+
+                origem: dados.sistema.ram.usada
+
+                formato: "gb"
+
+                posição: 180px 134px
+
+                fonte: 16px
+
+                cor: "#e6e8f0"
+            }
+
+            texto lab_ciclos {
+
+                conteúdo: "Ciclos:"
+
+                posição: 12px 172px
+
+                fonte: 11px
+
+                cor: "#9aa0b4"
+            }
+
+            texto val_ciclos {
+
+                origem: estado.atualizacoes
+
+                formato: "inteiro"
+
+                posição: 180px 168px
+
+                fonte: 16px
+
+                cor: "#e6e8f0"
+            }
+
+            texto lab_cliques {
+
+                conteúdo: "Cliques:"
+
+                posição: 12px 206px
+
+                fonte: 11px
+
+                cor: "#9aa0b4"
+            }
+
+            texto val_cliques {
+
+                origem: estado.cliques
+
+                formato: "inteiro"
+
+                posição: 180px 202px
+
+                fonte: 16px
+
+                cor: "#e6e8f0"
+            }
+        }
+
+        # Fase 07: histórico de CPU ao vivo (modo history do gráfico).
+        grafico hist_cpu {
+
+            origem: dados.sistema.cpu
+
+            formato: "percentual"
+
+            texto: "CPU — histórico"
+
+            posição: 16px 175px
+
+            tamanho: 560px 150px
+
+            cor: "#4ade80"
+        }
+
+        painel resumo_sys {
+
+            posição: 16px 380px
+
+            tamanho: 560px 150px
+
+            fundo: "#1a1d29"
+            texto rot_info {
+
+                conteúdo: "INFORMAÇÕES"
+
+                posição: 12px 6px
+
+                fonte: 11px
+
+                cor: "#9aa0b4"
+            }
+
+            texto info_so {
+
+                origem: dados.sistema.sistema.so
+
+                posição: 12px 36px
+
+                fonte: 12px
+
+                cor: "#e6e8f0"
+            }
+
+            texto info_pc {
+
+                origem: dados.sistema.sistema.computador
+
+                posição: 12px 62px
+
+                fonte: 12px
+
+                cor: "#e6e8f0"
+            }
+
+            texto info_cpu_nome {
+
+                origem: dados.sistema.sistema.arquitetura
+
+                posição: 12px 88px
+
+                fonte: 12px
+
+                cor: "#e6e8f0"
+            }
+
+            texto info_py {
+
+                origem: dados.sistema.sistema.python
+
+                posição: 12px 152px
+
+                fonte: 12px
+
+                cor: "#e6e8f0"
+            }
+        }
+
+        botão btn_atualizar {
+
+            texto: "Atualizar"
+
+            posição: 16px 560px
+
+            tamanho: 160px 40px
+
+            quando clicar {
+                atualizar_dados()
+            }
+        }
+
+        botão btn_auto {
+
+            texto: "Auto: ON/OFF"
+
+            posição: 190px 560px
+
+            tamanho: 160px 40px
+
+            quando clicar {
+                alternar_atualizacao()
+            }
+        }
+
+        botão btn_contar {
+
+            texto: "Contar"
+
+            posição: 364px 560px
+
+            tamanho: 160px 40px
+
+            quando clicar {
+                incrementar("cliques")
+            }
+        }
+
+        botão btn_modo {
+
+            texto: "Modo"
+
+            posição: 538px 560px
+
+            tamanho: 160px 40px
+
+            quando clicar {
+                se estado.modo == "auto" {
+                    estado.modo = "manual"
+                }
+                senão {
+                    estado.modo = "auto"
+                }
+                mostrar(estado.modo)
+            }
+        }
+
+        texto val_modo {
+
+            origem: estado.modo
+
+            posição: 712px 566px
+
+            fonte: 14px
+
+            cor: "#7aa2ff"
+        }
+
+        painel avisos_panel {
+
+            posição: 592px 430px
+
+            tamanho: 296px 110px
+
+            fundo: "#1a1d29"
+
+            texto rot_avisos {
+
+                conteúdo: "AVISOS (arquivo)"
+
+                posição: 12px 6px
+
+                fonte: 11px
+
+                cor: "#9aa0b4"
+            }
+
+            lista avisos_lista {
+
+                origem: estado.avisos.valor.avisos
+
+                posição: 12px 30px
+
+                tamanho: 260px 66px
+            }
+        }
+    }
+
+    # ---------- página: sistema ----------
+    painel pagina_sistema {
+
+        posição: 168px 56px
+
+        tamanho: 932px 644px
+
+        texto secao_sys {
+
+            conteúdo: "SISTEMA"
+
+            posição: 16px 8px
+
+            fonte: 13px
+
+            cor: "#9aa0b4"
+        }
+
+        texto sys_so {
+
+            origem: dados.sistema.sistema.so
+
+            posição: 16px 50px
+
+            fonte: 14px
+
+            cor: "#e6e8f0"
+        }
+
+        texto sys_ver {
+
+            origem: dados.sistema.sistema.versao
+
+            posição: 16px 80px
+
+            fonte: 12px
+
+            cor: "#e6e8f0"
+        }
+
+        texto sys_arq {
+
+            origem: dados.sistema.sistema.arquitetura
+
+            posição: 16px 110px
+
+            fonte: 12px
+
+            cor: "#e6e8f0"
+        }
+
+        texto sys_pc {
+
+            origem: dados.sistema.sistema.computador
+
+            posição: 16px 140px
+
+            fonte: 12px
+
+            cor: "#e6e8f0"
+        }
+
+        texto sys_py {
+
+            origem: dados.sistema.sistema.python
+
+            posição: 16px 170px
+
+            fonte: 12px
+
+            cor: "#e6e8f0"
+        }
+
+        texto sys_ram {
+
+            origem: dados.sistema.ram.total
+
+            formato: "gb"
+
+            posição: 16px 220px
+
+            fonte: 14px
+
+            cor: "#e6e8f0"
+        }
+
+        texto sys_ram_livre {
+
+            origem: dados.sistema.ram.disponivel
+
+            formato: "gb"
+
+            posição: 16px 250px
+
+            fonte: 12px
+
+            cor: "#e6e8f0"
+        }
+
+        texto sys_disco {
+
+            origem: dados.sistema.disco.total
+
+            formato: "gb"
+
+            posição: 16px 300px
+
+            fonte: 14px
+
+            cor: "#e6e8f0"
+        }
+
+        texto sys_disco_livre {
+
+            origem: dados.sistema.disco.livre
+
+            formato: "gb"
+
+            posição: 16px 330px
+
+            fonte: 12px
+
+            cor: "#e6e8f0"
+        }
+    }
+
+    # ---------- página: processos ----------
+    painel pagina_processos {
+
+        posição: 168px 56px
+
+        tamanho: 932px 644px
+
+        texto secao_proc {
+
+            conteúdo: "PROCESSOS"
+
+            posição: 16px 8px
+
+            fonte: 13px
+
+            cor: "#9aa0b4"
+        }
+
+        texto proc_qtd {
+
+            origem: dados.sistema.processos.quantidade
+
+            formato: "inteiro"
+
+            posição: 16px 40px
+
+            fonte: 22px
+
+            cor: "#e6e8f0"
+        }
+
+        lista lista_proc {
+
+            origem: dados.sistema.processos.lista
+
+            posição: 16px 90px
+
+            tamanho: 700px 420px
+        }
+    }
+
+    # ---------- página: rede ----------
+    painel pagina_rede {
+
+        posição: 168px 56px
+
+        tamanho: 932px 644px
+
+        texto secao_rede {
+
+            conteúdo: "REDE"
+
+            posição: 16px 8px
+
+            fonte: 13px
+
+            cor: "#9aa0b4"
+        }
+
+        texto rede_if {
+
+            origem: dados.sistema.rede.interface
+
+            posição: 16px 50px
+
+            fonte: 14px
+
+            cor: "#e6e8f0"
+        }
+
+        texto rede_down {
+
+            origem: dados.sistema.rede.recebidos
+
+            formato: "gb"
+
+            posição: 16px 90px
+
+            fonte: 14px
+
+            cor: "#e6e8f0"
+        }
+
+        texto rede_up {
+
+            origem: dados.sistema.rede.enviados
+
+            formato: "mb"
+
+            posição: 16px 130px
+
+            fonte: 14px
+
+            cor: "#e6e8f0"
+        }
+    }
+}

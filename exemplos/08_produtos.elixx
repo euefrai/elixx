@@ -1,0 +1,83 @@
+# 08 — Produtos com dados, função e ação (Fase 09, autocontido).
+# Executar: elixx executar exemplos/08_produtos.elixx
+# (versão modular em app/ via import: ver 07 e 09_app_completa)
+
+componente ProdutoSimples {
+    propriedade produto
+
+    estado {
+        favorito: falso
+    }
+
+    corpo {
+        cartao base {
+            tamanho: 420px 100px
+            fundo: "#1a1d29"
+
+            texto nome {
+                origem: param.produto.nome
+                posição: 12px 8px
+                fonte: 15px
+                cor: "#e6e8f0"
+            }
+
+            checkbox fav {
+                texto: "Favorito"
+                posição: 12px 56px
+                ligado_a: local.favorito
+            }
+
+            botão detalhe {
+                texto: "Detalhes"
+
+                posição: 280px 56px
+
+                tamanho: 120px 36px
+
+                quando clicar {
+                    mostrar(param.produto.nome)
+                }
+            }
+        }
+    }
+}
+
+funcao etiqueta(preco) {
+    retornar preco * 1.1
+}
+
+acao excluir(id) {
+    estado.ultimo = id
+}
+
+dados produtos {
+    arquivo: "dados-demo/produtos.json"
+}
+
+estado {
+    ultimo: 0
+}
+
+janela principal {
+    titulo: "Produtos simples"
+
+    tamanho: 560px 520px
+
+    coluna pagina {
+        posição: 16px 16px
+
+        espacamento: 10px
+
+        lista catalogo {
+            origem: estado.produtos.valor.produtos
+            chave: item.id
+            tamanho: 460px 400px
+
+            modelo {
+                ProdutoSimples card {
+                    produto: item
+                }
+            }
+        }
+    }
+}

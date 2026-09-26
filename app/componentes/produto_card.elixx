@@ -1,0 +1,60 @@
+# Cartão de produto com estado local (favorito por instância).
+
+componente ProdutoCard {
+    propriedade produto
+
+    estado {
+        favorito: falso
+    }
+
+    corpo {
+        cartao base {
+            tamanho: 420px 120px
+            fundo: "#1a1d29"
+
+            texto nome {
+                origem: param.produto.nome
+                posição: 12px 8px
+                fonte: 15px
+                cor: "#e6e8f0"
+            }
+
+            texto preco {
+                origem: etiqueta(param.produto.preco)
+                posição: 12px 36px
+                fonte: 13px
+                cor: "#9aa0b4"
+            }
+
+            checkbox fav {
+                texto: "Favorito"
+                posição: 12px 68px
+                ligado_a: local.favorito
+            }
+
+            botão detalhe {
+                texto: "Detalhes"
+
+                posição: 280px 68px
+
+                tamanho: 120px 36px
+
+                quando clicar {
+                    mostrar(param.produto.nome)
+                }
+            }
+
+            botão excluir_btn {
+                texto: "Excluir"
+
+                posição: 150px 68px
+
+                tamanho: 120px 36px
+
+                quando clicar {
+                    executar excluir(item.id)
+                }
+            }
+        }
+    }
+}

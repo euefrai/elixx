@@ -1,0 +1,134 @@
+# ELiXX — Reatividade seletiva (Fase 05). Executar: elixx executar exemplos/reatividade.elixx
+# Uma mudança atualiza SÓ os consumidores dela (versões + último valor).
+
+estado {
+    base: 10
+    ok: verdadeiro
+}
+
+janela principal {
+
+    titulo: "Reatividade ELiXX"
+
+    tamanho: 620px 520px
+
+    fundo: "#14161f"
+
+    coluna pagina {
+
+        posição: 16px 16px
+
+        tamanho: 588px 488px
+
+        espacamento: 10px
+
+        texto titulo {
+
+            conteúdo: "Uma mudança, vários consumidores"
+
+            fonte: 16px
+
+            cor: "#e6e8f0"
+        }
+
+        texto cons_a {
+
+            origem: estado.base
+
+            formato: "inteiro"
+
+            fonte: 14px
+
+            cor: "#e6e8f0"
+        }
+
+        texto cons_b {
+
+            origem: estado.base
+
+            formato: "inteiro"
+
+            fonte: 14px
+
+            cor: "#7aa2ff"
+        }
+
+        barra bar_base {
+
+            origem: estado.base
+
+            tamanho: 300px 16px
+        }
+
+        texto derivado {
+
+            origem: estado.base * 2 + 5
+
+            formato: "inteiro"
+
+            fonte: 14px
+
+            cor: "#4ade80"
+        }
+
+        linha botoes {
+
+            espacamento: 8px
+
+            botão sobe {
+
+                texto: "+5"
+
+                tamanho: 90px 40px
+
+                quando clicar {
+                    estado.base += 5
+                }
+            }
+
+            botão desce {
+
+                texto: "-5"
+
+                tamanho: 90px 40px
+
+                quando clicar {
+                    estado.base -= 5
+                }
+            }
+        }
+
+        separador div {
+
+            largura: 100%
+        }
+
+        texto rot_outra {
+
+            conteúdo: "Outro estado (independente de base):"
+
+            fonte: 11px
+
+            cor: "#9aa0b4"
+        }
+
+        linha checks {
+
+            espacamento: 16px
+
+            checkbox chk_ok {
+
+                texto: "OK"
+
+                ligado_a: estado.ok
+            }
+
+            indicador ind_ok {
+
+                texto: "estado.ok"
+
+                origem: estado.ok
+            }
+        }
+    }
+}

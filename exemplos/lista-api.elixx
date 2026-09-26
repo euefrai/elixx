@@ -1,0 +1,77 @@
+# ELiXX — GET → JSON → estado → lista (Fase 06).
+# 1) Rode o servidor demo: python exemplos/servidor_demo.py
+# 2) Executar: elixx executar exemplos/lista-api.elixx
+
+dados usuarios {
+    url: "http://127.0.0.1:8765/usuarios"
+    metodo: "GET"
+    tempo_limite: 5s
+    atualizar: 10s
+}
+
+janela principal {
+
+    titulo: "Lista API ELiXX"
+
+    tamanho: 640px 520px
+
+    fundo: "#14161f"
+
+    coluna pagina {
+
+        posição: 16px 16px
+
+        tamanho: 608px 488px
+
+        espacamento: 10px
+
+        texto titulo {
+
+            conteúdo: "Usuários da API local"
+
+            fonte: 16px
+
+            cor: "#e6e8f0"
+        }
+
+        texto status {
+
+            origem: estado.usuarios.status
+
+            formato: "inteiro"
+
+            fonte: 12px
+
+            cor: "#9aa0b4"
+        }
+
+        lista nomes {
+
+            origem: estado.usuarios.valor
+
+            formato: "json"
+
+            tamanho: 560px 260px
+        }
+
+        texto erro_api {
+
+            origem: estado.usuarios.erro
+
+            fonte: 12px
+
+            cor: "#f87171"
+        }
+
+        botão recarregar {
+
+            texto: "Recarregar"
+
+            tamanho: 160px 40px
+
+            quando clicar {
+                sincronizar("usuarios")
+            }
+        }
+    }
+}

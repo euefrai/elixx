@@ -1,0 +1,82 @@
+# ELiXX — Motion Synthesis (Fase 16: caminho vira movimento)
+# Rota andar → pular → andar → voar sintetizada em Motions F11.
+# A síntese e a execução acontecem via API (ver docs/motion-synthesis.md).
+# Executar: elixx executar exemplos/motion-synthesis.elixx
+
+janela jornada {
+    titulo: "Motion Synthesis"
+    tamanho: 800px 600px
+    fundo: "#14161f"
+
+    personagem Heroi {
+        posição: 50px 500px
+
+        parte corpo {
+            imagem: "exemplos/assets/logo.png"
+        }
+
+        capacidade andar
+        capacidade pular
+        capacidade voar
+    }
+
+    mundo Mundo {
+        tamanho: 2000px 1200px
+
+        chão chao_a {
+            posição: 0px 550px
+            tamanho: 800px 50px
+        }
+
+        plataforma plat_baixa {
+            posição: 250px 420px
+            tamanho: 200px 30px
+        }
+
+        plataforma plat_alta {
+            posição: 550px 250px
+            tamanho: 200px 30px
+        }
+
+        obstáculo rocha {
+            posição: 300px 470px
+            tamanho: 40px 40px
+        }
+
+        ponto inicio {
+            posição: 50px 500px
+        }
+
+        ponto destino {
+            posição: 650px 250px
+        }
+
+        usar personagem Heroi
+    }
+
+    navegacao Rota {
+        caminho inicio -> chao_a {
+            modo: andar
+        }
+
+        caminho chao_a -> plat_baixa {
+            modo: pular
+            custo: 2
+        }
+
+        caminho plat_baixa -> plat_alta {
+            modo: voar
+            custo: 4
+            requer: voar
+        }
+
+        caminho plat_alta -> destino {
+            modo: andar
+        }
+    }
+
+    texto legenda {
+        texto: "Motion Synthesis: andar, pular, voar"
+        posição: 20px 20px
+    }
+}
