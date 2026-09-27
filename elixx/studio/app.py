@@ -31,6 +31,10 @@ ATALHOS = {
     "Ctrl+Z": "desfazer",
     "Ctrl+Y": "refazer",
     "Ctrl+F": "buscar",
+    "Ctrl+P": "pesquisa_rapida",
+    "Ctrl+Shift+P": "paleta_comandos",
+    "Ctrl+Enter": "aprovar",
+    "Esc": "cancelar",
 }
 """Mapa atalho → comando (sem quebrar atalhos do sistema: só dentro)."""
 

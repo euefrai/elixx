@@ -104,13 +104,21 @@ class AgentPlan:
     """Plano: intenção + passos ordenáveis por dependência."""
 
     def __init__(self, intencao=None, passos: list | None = None,
-                 estado: str = "pendente") -> None:
+                 estado: str = "pendente",
+                 teto: int = MAX_PASSOS) -> None:
         from .intencao import AgentIntent
 
         if intencao is not None and not isinstance(intencao,
                                                    AgentIntent):
             raise ErroELiXX("Agent: plano espera AgentIntent.")
+        try:
+            teto_num = int(teto)
+        except (TypeError, ValueError):
+            raise ErroELiXX("Agent: teto de passos inteiro.")
+        if teto_num < 1:
+            raise ErroELiXX("Agent: teto de passos ≥ 1.")
         self.intencao = intencao
+        self.teto = teto_num
         self.passos: dict[str, PlanStep] = {}
         for p in (passos or []):
             passo = (p if isinstance(p, PlanStep)
@@ -118,8 +126,8 @@ class AgentPlan:
             if passo.id in self.passos:
                 raise ErroELiXX(f'Agent: passo "{passo.id}" '
                                 "duplicado.")
-            if len(self.passos) >= MAX_PASSOS:
-                raise ErroELiXX(f"Agent: plano além de {MAX_PASSOS} "
+            if len(self.passos) >= self.teto:
+                raise ErroELiXX(f"Agent: plano além de {self.teto} "
                                 "passos.")
             self.passos[passo.id] = passo
         if estado not in ("pendente", "executando", "concluido",

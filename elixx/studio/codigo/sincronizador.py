@@ -213,7 +213,8 @@ def aplicar_com_changeset(sincronizador: SincronizadorCodigo,
             "motivo": "Aplicado e ressincronizado.",
             "arquivos": aplicadas.get("arquivos", []),
             "diff_textual": diff_textual(antes_texto, novo_texto),
-            "diff": comparar_snapshots(snap_antes, snap_depois)}
+            "diff": comparar_snapshots(snap_antes, snap_depois),
+            "changeset": cs}
 
 
 class SincronizadorBidirecional:

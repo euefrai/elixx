@@ -49,6 +49,18 @@ from elixx.studio.agent.operacoes import (
     snippet_evento,
     validar_operacao,
 )
+from elixx.studio.agent.planejamento import (
+    Condicao,
+    PainelPlano,
+    PlanoTarefa,
+    construir_plano,
+    diff_semantico_passo,
+    dry_run,
+    executar_plano,
+    explicar_plano,
+    preparar_execucao,
+    validar_plano,
+)
 from elixx.studio.agent.loop import (
     PlanoSemantico,
     SemanticContext,
@@ -87,6 +99,9 @@ __all__ = [
     "intent_para_operacao", "operacao_para_ferramentas",
     "operacao_para_intent", "operacao_para_proposta",
     "resolver_referencia", "snippet_evento", "validar_operacao",
+    "Condicao", "PainelPlano", "PlanoTarefa", "construir_plano",
+    "diff_semantico_passo", "dry_run", "executar_plano",
+    "explicar_plano", "preparar_execucao", "validar_plano",
     "PlanoSemantico", "SemanticContext", "consultar_modelo",
     "construir_contexto_semantico", "diff_legivel",
     "executar_loop", "gerar_changeset", "reanalisar_modelo",

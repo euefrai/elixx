@@ -24,8 +24,9 @@ PAINEIS = ("project", "editor", "preview", "inspector", "console",
            "timeline", "diagnosticos", "agent")
 """Painéis do workspace (visibilidade alternável)."""
 
-ABAS_INFERIORES = ("console", "timeline", "diagnosticos")
-"""Abas da faixa inferior (uma ativa por vez)."""
+ABAS_INFERIORES = ("console", "timeline", "diagnosticos",
+                     "plano")
+"""Abas da faixa inferior (uma ativa por vez; F33 soma plano)."""
 
 PALAVRAS_CHAVE = ("janela", "tela", "personagem", "parte", "pose",
                   "expressao", "animacao", "componente", "estado",
@@ -713,6 +714,36 @@ class StudioWorkspace:
 
 # ----- Tk opcional (TUDO lazy; headless intacto) -----
 
+def salvar_layout(ws: StudioWorkspace, relativo: str = ".elixx/layout.json") -> str:
+    """Persiste painéis/aba/geometria (só dados locais, sem segredo)."""
+    import json
+
+    destino = ws.app.workspace.resolver(relativo)
+    destino.parent.mkdir(parents=True, exist_ok=True)
+    destino.write_text(json.dumps(ws.layout.to_dict(),
+                                  ensure_ascii=False, sort_keys=True,
+                                  indent=2), encoding="utf-8")
+    return relativo
+
+
+def carregar_layout(ws: StudioWorkspace, relativo: str = ".elixx/layout.json") -> bool:
+    """Restaura layout se existir (False = mantém padrão)."""
+    import json
+
+    try:
+        destino = ws.app.workspace.resolver(relativo)
+    except ErroELiXX:
+        return False
+    if not destino.is_file():
+        return False
+    try:
+        dados = json.loads(destino.read_text(encoding="utf-8"))
+    except ValueError:
+        return False
+    ws.layout = Layout.from_dict(dados)
+    return True
+
+
 def montar_workspace_ui(ws: StudioWorkspace):
     """Layout F29: toolbar | project/preview/inspector | bottom tabs.
 
@@ -730,6 +761,11 @@ def montar_workspace_ui(ws: StudioWorkspace):
     janela.title("ELiXX Studio")
     janela.geometry(f"{larg}x{alt}")
     janela.minsize(800, 500)
+    try:
+        estilo = ttk.Style(janela)
+        estilo.theme_use("clam")  # base consistente e compacta
+    except Exception:
+        pass
 
     # -- toolbar real (ações do StudioApp) --
     topo = ttk.Frame(janela)
@@ -754,13 +790,29 @@ def montar_workspace_ui(ws: StudioWorkspace):
             ws.console.registrar("ERROR", str(exc)[:200])
         _refresh_estado()
 
+    barra_status = ttk.Label(janela, text="ELiXX",
+                               anchor="w")
+    dicas = {
+        "Salvar": "Salvar arquivo ativo (Ctrl+S)",
+        "Executar": "Executar preview (F5)",
+        "Parar": "Parar preview (Shift+F5)",
+        "Compacto": "Alternar modo compacto",
+    }
+
+    def _dica(texto):
+        def _entra(_e=None):
+            barra_status.config(text=f"ELiXX — {texto}")
+        return _entra
+
     for rotulo, nome in (("Salvar", "salvar"),
                          ("Executar", "executar"),
                          ("Parar", "parar")):
-        ttk.Button(topo, text=rotulo,
-                   command=lambda n=nome: _cmd(
-                       n, app.documentos.ativo or "")).pack(
-                           side="left", padx=2)
+        botao = ttk.Button(topo, text=rotulo,
+                           command=lambda n=nome: _cmd(
+                               n, app.documentos.ativo or ""))
+        botao.pack(side="left", padx=2)
+        botao.bind("<Enter>", _dica(dicas[rotulo]))
+        botao.bind("<Leave>", lambda _e: _refresh_barra())
     ttk.Button(topo, text="Compacto",
                command=lambda: (ws.layout.definir_compacto(
                    not ws.layout.compacto),
@@ -777,9 +829,28 @@ def montar_workspace_ui(ws: StudioWorkspace):
     lista_arq = tk.Listbox(esq)
     lista_arq.pack(fill="both", expand=True)
 
+    def _refresh_barra():
+        est = ws.estado()
+        diag = ws.diagnosticos.resumo()
+        plano = getattr(ws, "plano_view", None)
+        prog = plano.progresso() if plano is not None else None
+        parte_plano = (f"  Agent: {prog['concluidos']}/"
+                       f"{prog['total']} etapas"
+                       if prog and prog["total"] else "")
+        barra_status.config(
+            text=f"ELiXX  "
+                 f"{est['projeto'] or '(nenhum projeto)'}  "
+                 f"{app.documentos.ativo or '(nenhum arquivo)'}  "
+                 f"{'● sincronizado' if est['analisando'] else '○ sem modelo'}  "
+                 f"{diag['erros']} erro(s){parte_plano}")
+
     def _recarregar_arvore():
         lista_arq.delete(0, "end")
-        for no in ws.arvore.nos():
+        nos = ws.arvore.nos()
+        if not nos:
+            lista_arq.insert("end", "(nenhum arquivo)")
+            return
+        for no in nos:
             lista_arq.insert("end",
                              f"[{no['tipo']}] {no['nome']}")
 
@@ -841,10 +912,21 @@ def montar_workspace_ui(ws: StudioWorkspace):
     corpo_aba.pack(fill="x")
     timeline_lista = tk.Listbox(base, height=6)
 
+    lista_plano = tk.Listbox(base, height=6)
+    texto_detalhe = tk.Text(base, height=4)
+    modo_diff = {"modo": "codigo"}
+
     def _mostrar_aba(aba: str):
         ws.layout.definir_aba(aba)
         corpo_aba.pack_forget()
         timeline_lista.pack_forget()
+        lista_plano.pack_forget()
+        texto_detalhe.pack_forget()
+        if aba == "plano":
+            _mostrar_plano()
+            lista_plano.pack(fill="x")
+            texto_detalhe.pack(fill="x")
+            return
         if aba == "timeline":
             timeline_lista.delete(0, "end")
             for alvo, blocos in ws.timeline.trilhas().items():
@@ -867,10 +949,119 @@ def montar_workspace_ui(ws: StudioWorkspace):
                                  f"{e.get('mensagem', '')}\n")
             corpo_aba.pack(fill="x")
 
-    for aba in ("console", "timeline", "diagnosticos"):
+    for aba in ("console", "timeline", "diagnosticos",
+                  "plano"):
         ttk.Button(botoes_abas, text=aba.capitalize(),
                    command=lambda a=aba: _mostrar_aba(a)).pack(
                        side="left")
+
+    def _mostrar_plano():
+        from .agent.planejamento import PainelPlano
+
+        lista_plano.delete(0, "end")
+        painel = getattr(ws, "plano_view", None)
+        if painel is None or not isinstance(painel, PainelPlano):
+            lista_plano.insert("end", "(nenhuma tarefa)")
+            return
+        icones = {"pendente": "○", "executando": "▶",
+                  "concluido": "✓", "falhou": "✗",
+                  "cancelado": "—", "bloqueado": "■"}
+        for passo in painel.passos():
+            marca = icones.get(passo["estado"], "?")
+            lista_plano.insert(
+                "end",
+                f"{marca} {passo['id']}: {passo['descricao']}")
+        prog = painel.progresso()
+        lista_plano.insert("end", f"-- {prog['concluidos']}/"
+                                  f"{prog['total']} "
+                                  f"({prog['percentual']}%) --")
+
+    def _detalhe_passo(_evento=None):
+        from .agent.planejamento import PainelPlano
+
+        painel = getattr(ws, "plano_view", None)
+        if painel is None or not isinstance(painel, PainelPlano):
+            return
+        try:
+            item = lista_plano.get(lista_plano.curselection())
+        except Exception:
+            return
+        if item.startswith("(") or item.startswith("--"):
+            return
+        pid = item.split(":", 1)[0].split(" ", 1)[-1]
+        try:
+            detalhe = painel.selecionar_passo(pid)
+            if modo_diff["modo"] == "semantico" and \
+                    ws.modelo is not None:
+                diff = painel.diff_passo(pid, ws.app.workspace,
+                                         ws.modelo)
+                corpo = diff.get("semantico",
+                                 diff.get("codigo", "?"))
+            else:
+                diff = painel.diff_passo(
+                    pid, ws.app.workspace, ws.modelo) \
+                    if ws.modelo is not None else {}
+                trocas = diff.get("trocas", []) if isinstance(
+                    diff, dict) else []
+                corpo = "; ".join(
+                    f"+{t.get('adicionadas', [])}"
+                    for t in trocas[:3]) or "(sem diff de código)"
+            texto_detalhe.delete("1.0", "end")
+            texto_detalhe.insert(
+                "end",
+                f"{detalhe['id']}: {detalhe['descricao']}\n"
+                f"estado={detalhe['estado']} "
+                f"deps={detalhe['dependencias']}\n{corpo}\n")
+        except ErroELiXX as exc:
+            ws.console.registrar("ERROR", str(exc)[:200])
+        _refresh_estado()
+
+    lista_plano.bind("<<ListboxSelect>>", _detalhe_passo)
+
+    def _alternar_diff():
+        modo_diff["modo"] = "semantico" if modo_diff["modo"] == \
+            "codigo" else "codigo"
+        _detalhe_passo()
+
+    ttk.Button(botoes_abas, text="Código/Semântico",
+               command=_alternar_diff).pack(side="left")
+
+    def _plano_revisar():
+        from .agent.planejamento import PainelPlano
+
+        painel = getattr(ws, "plano_view", None)
+        if isinstance(painel, PainelPlano):
+            ws.console.registrar(
+                "AGENT", f"plano: {painel.resumo()}")
+        _mostrar_aba("plano")
+        _refresh_estado()
+
+    def _plano_aprovar():
+        from .agent.planejamento import PainelPlano
+
+        painel = getattr(ws, "plano_view", None)
+        if isinstance(painel, PainelPlano) and painel.aprovar():
+            ws.console.registrar("AGENT", "plano aprovado")
+        _refresh_estado()
+
+    def _plano_cancelar():
+        from .agent.planejamento import PainelPlano
+
+        painel = getattr(ws, "plano_view", None)
+        if isinstance(painel, PainelPlano):
+            painel.cancelar()
+            ws.console.registrar("AGENT", "plano cancelado")
+        ws.inspetor.limpar()
+        _refresh_estado()
+
+    quadro_plano_btn = ttk.Frame(botoes_abas)
+    quadro_plano_btn.pack(side="right")
+    ttk.Button(quadro_plano_btn, text="Revisar",
+               command=_plano_revisar).pack(side="left")
+    ttk.Button(quadro_plano_btn, text="Aprovar",
+               command=_plano_aprovar).pack(side="left")
+    ttk.Button(quadro_plano_btn, text="Cancelar",
+               command=_plano_cancelar).pack(side="left")
 
     # -- seleção preview → inspector via F27 --
     def _ao_selecionar_prev(_evento=None):
@@ -978,10 +1169,57 @@ def montar_workspace_ui(ws: StudioWorkspace):
     if ws.modelo is not None:
         ws.preview.sincronizar_modelo(ws.modelo)
         _recarregar_preview()
+    else:
+        lista_prev.insert("end", "(nada para mostrar)")
+    texto_insp.insert("1.0", "(nenhum objeto selecionado)")
+    if not ws.console.entradas:
+        ws.console.registrar("INFO", "ELiXX Studio pronto.")
     _mostrar_aba("console")
     _refresh_estado()
+
+    # -- barra de status (projeto | arquivo | sync | agent) --
+    barra_status.pack(fill="x", side="bottom")
+    _refresh_barra()
+
+    # -- teclado (sem sobrescrever edição: só com plano/janela) --
+    def _tecla_aprovar(_e=None):
+        from .agent.planejamento import PainelPlano
+
+        painel = getattr(ws, "plano_view", None)
+        if isinstance(painel, PainelPlano):
+            _plano_aprovar()
+
+    def _tecla_cancelar(_e=None):
+        _plano_cancelar()
+
+    def _tecla_busca(_e=None):
+        lista_arq.focus_set()
+
+    def _tecla_comandos(_e=None):
+        from .comandos import COMANDOS
+
+        ws.console.registrar("INFO",
+                             f"comandos: {', '.join(COMANDOS)}")
+        _mostrar_aba("console")
+
+    janela.bind("<Control-p>", lambda _e: _tecla_busca())
+    janela.bind("<Control-P>", lambda _e: _tecla_busca())
+    janela.bind("<Control-Shift-P>", lambda _e: _tecla_comandos())
+    janela.bind("<Control-Shift-p>", lambda _e: _tecla_comandos())
+    janela.bind("<Control-Return>", lambda _e: _tecla_aprovar())
+    janela.bind("<Escape>", lambda _e: _tecla_cancelar())
+
+    def _fechar():
+        try:
+            salvar_layout(ws)
+        except ErroELiXX:
+            pass
+        app.fechar_ui()
+
+    janela.protocol("WM_DELETE_WINDOW", _fechar)
     app.janela = janela
     ws._widgets = {"janela": janela, "arquivos": lista_arq,
                    "preview": lista_prev, "inspetor": texto_insp,
-                   "editor": ed_texto}
+                   "editor": ed_texto, "plano": lista_plano,
+                   "status": barra_status}
     return janela
