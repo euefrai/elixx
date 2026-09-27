@@ -366,6 +366,17 @@ class PreviewModelo:
     def parar(self) -> None:
         self.app.preview.parar()
 
+    def construir_canvas(self, cena, personagens=None,
+                         modelo=None):
+        """SceneCanvas real sobre cena/personagens (F40; aditivo)."""
+        from .scene_canvas import SceneCanvas
+
+        canvas = SceneCanvas(inspetor=self.app.inspetor,
+                             eventos=self.app.eventos)
+        canvas.montar(cena, personagens, modelo)
+        self.canvas = canvas
+        return canvas
+
     def __repr__(self) -> str:
         return (f"PreviewModelo({len(self.entidades)} entidades, "
                 f"sel={self.selecionado})")
@@ -1125,6 +1136,34 @@ def montar_workspace_ui(ws: StudioWorkspace):
                           selectbackground=ELIXX_COLORS[
                               "selection"],
                           highlightthickness=0, borderwidth=0)
+    except Exception:
+        pass
+    tela_cena = None
+    try:
+        from .scene_canvas import SceneCanvas, desenhar
+
+        tela_cena = tk.Canvas(quadro_viewport, height=220,
+                              highlightthickness=0,
+                              borderwidth=0)
+        tela_cena.pack(fill="both", expand=True)
+        _texto_cena = ""
+        try:
+            _doc_cena = app.documentos.obter(
+                app.documentos.ativo or "src/main.elixx")
+            _texto_cena = _doc_cena.texto
+        except Exception:
+            _texto_cena = ""
+        if _texto_cena.strip():
+            from .scene_canvas import cena_de_texto
+
+            _saida_cena = cena_de_texto(_texto_cena)
+            if _saida_cena["ok"]:
+                _canvas_cena = SceneCanvas(
+                    inspetor=app.inspetor, eventos=app.eventos)
+                _canvas_cena.montar(_saida_cena["cena"],
+                                    _saida_cena["personagens"],
+                                    ws.modelo)
+                desenhar(tela_cena, _canvas_cena)
     except Exception:
         pass
 
