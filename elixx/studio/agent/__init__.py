@@ -24,6 +24,18 @@ from elixx.studio.agent.provider import (
     NullAgentProvider,
     StructuredAgentProvider,
 )
+from elixx.studio.agent.loop import (
+    PlanoSemantico,
+    SemanticContext,
+    consultar_modelo,
+    construir_contexto_semantico,
+    diff_legivel,
+    executar_loop,
+    gerar_changeset,
+    reanalisar_modelo,
+    resolver_alvo,
+    verificar_precondicoes,
+)
 from elixx.studio.agent.resultado import AgentResult
 from elixx.studio.agent.tarefa import AgentTask, executar_tarefa
 
@@ -41,4 +53,8 @@ __all__ = [
     "StructuredAgentProvider",
     "AgentResult",
     "AgentTask", "executar_tarefa",
+    "PlanoSemantico", "SemanticContext", "consultar_modelo",
+    "construir_contexto_semantico", "diff_legivel",
+    "executar_loop", "gerar_changeset", "reanalisar_modelo",
+    "resolver_alvo", "verificar_precondicoes",
 ]

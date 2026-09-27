@@ -120,10 +120,11 @@ class AdaptadorAST:
         tipo = "tela" if getattr(janela, "eh_tela", False) else \
             "janela"
         jid = f"{tipo}:{janela.nome}"
-        if self._entidade(jid, tipo, janela.nome,
-                          getattr(janela, "linha", None), {},
-                          conta) is None:
-            return
+        self._entidade(jid, tipo, janela.nome,
+                       getattr(janela, "linha", None), {}, conta)
+        # Sem retorno antecipado: janela duplicada entre arquivos
+        # ainda pode conter membros novos (deduplicação individual
+        # abaixo + relações sem duplicata).
         for comp in getattr(janela, "componentes", []):
             self._membro(comp, jid, conta)
         for evento in getattr(janela, "eventos", []):
@@ -157,10 +158,8 @@ class AdaptadorAST:
 
     def _personagem(self, no, dono_id: str, conta: dict) -> None:
         pid = f"personagem:{no.nome}"
-        if self._entidade(pid, "personagem", no.nome,
-                          getattr(no, "linha", None), {}, conta
-                          ) is None:
-            return
+        self._entidade(pid, "personagem", no.nome,
+                       getattr(no, "linha", None), {}, conta)
         self._relacao(dono_id, "contem", pid, conta)
         for parte in getattr(no, "partes", []):
             self._parte(parte, pid, pid, conta)
