@@ -23,9 +23,9 @@ __all__ = [
     "transicoes_permitidas",
 ]
 
-ESTAGIOS = ("TASK", "CONTEXT", "OPERATIONS", "PLAN", "CHANGES",
-            "PREVIEW")
-"""Etapas do workflow (ordem fixa, clicáveis)."""
+ESTAGIOS = ("TASK", "CONTEXT", "TOOLS", "OPERATIONS", "PLAN",
+            "CHANGES", "PREVIEW")
+"""Etapas do workflow (F36 soma TOOLS entre CONTEXT e OPERATIONS)."""
 
 ESTADOS = ("IDLE", "RECEIVED", "CONTEXT_ANALYZING",
            "CONTEXT_READY", "AMBIGUOUS", "OPERATIONS_READY",
@@ -36,7 +36,8 @@ ESTADOS = ("IDLE", "RECEIVED", "CONTEXT_ANALYZING",
 
 TIPOS_NO = ("TASK", "ENTITY", "RELATION", "FILE", "CHARACTER",
             "PART", "SCENE", "POSE", "GESTURE", "ANIMATION", "ASSET",
-            "CAPABILITY", "OPERATION", "PLAN_STEP", "CHANGE")
+            "CAPABILITY", "OPERATION", "PLAN_STEP", "CHANGE",
+            "TOOL")
 """Vocabulário de nós (só instancia com origem real; RELATION vive
 como aresta tipada — sem nó duplicado, documentado)."""
 
@@ -166,6 +167,17 @@ class AgentEdge:
     def __repr__(self) -> str:
         return (f"AgentEdge({self.origem} —{self.tipo}→ "
                 f"{self.destino})")
+
+
+class _AmbienteLeitura:
+    """Ambiente só-leitura p/ tools (modelo F27, sem escrita)."""
+
+    def __init__(self, modelo) -> None:
+        self.modelo = modelo
+        self.workspace = None
+        self.personagens = {}
+        self.contexto = None
+        self.preview = None
 
 
 class AgentWorkspace:
@@ -389,6 +401,33 @@ class AgentWorkspace:
                             {"ordem": ordem},
                             quantidade=len(ordem))
         return {"ordem": ordem}
+
+    def carregar_tools(self, trace) -> dict:
+        """ToolTrace F36 → nós TOOL + cadeia de uso (só leitura)."""
+        total = 0
+        anterior = None
+        for chamada in getattr(trace, "chamadas", []):
+            nid = f"tool:{chamada.id}"
+            if nid not in self.nos:
+                self.adicionar_no(AgentNode(
+                    nid, "TOOL",
+                    f"{chamada.tool_id} [{chamada.estado}]",
+                    source_id=chamada.tool_id,
+                    detalhe={"estado": chamada.estado,
+                             "argumentos": dict(
+                                 chamada.argumentos)}))
+                total += 1
+            if anterior is not None:
+                try:
+                    self.adicionar_aresta(AgentEdge(
+                        anterior, "segue", nid, fonte="F36"))
+                except ErroELiXX:
+                    pass
+            anterior = nid
+        self.marcar_estagio("TOOLS", "pronto",
+                            {"chamadas": total}, quantidade=total)
+        self._emitir("context_updated", {"tools": total})
+        return {"tools": total}
 
     def carregar_changes(self, proposals: list) -> dict:
         """Propostas F32 → nós CHANGE + aresta modifica."""
@@ -690,6 +729,7 @@ class AgentWorkspace:
                 {"entidades": len(contexto.entidades)},
                 quantidade=len(contexto.entidades))
             self.carregar_contexto(contexto)
+            self._executar_tools(intent, modelo)
             ops = self._operacoes_de(intent)
             self.transitar("OPERATIONS_READY")
             self.marcar_estagio("OPERATIONS", "pronto",
@@ -719,6 +759,27 @@ class AgentWorkspace:
              "esconder") else [])
         return construir_contexto(modelo, tarefa,
                                   ContextoConfig())
+
+    def _executar_tools(self, intent, modelo) -> None:
+        """TOOLS: buscar_entidade + consultar_relacoes (READ, F36)."""
+        from .ferramentas_semanticas import (
+            AgentToolCall, SemanticPermissions, SemanticToolRegistry,
+            ToolTrace, executar_chamada)
+
+        alvo = intent.personagem or intent.alvo or ""
+        ambiente = _AmbienteLeitura(modelo)
+        permissoes = SemanticPermissions(["READ"])
+        registro = SemanticToolRegistry()
+        trace = ToolTrace()
+        for tool_id, args in (
+                ("buscar_entidade", {"nome": alvo}),
+                ("consultar_relacoes",
+                 {"id": f"personagem:{alvo}"})):
+            chamada = AgentToolCall(tool_id, args)
+            trace.registrar(chamada)
+            executar_chamada(registro, chamada, ambiente,
+                             permissoes)
+        self.carregar_tools(trace)
 
     def _operacoes_de(self, intent):
         from .operacoes import intent_para_operacao

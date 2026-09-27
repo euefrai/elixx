@@ -52,8 +52,9 @@ def ws_com_contexto():
 def test_ws_criacao():
     ws = AgentWorkspace("fazer X")
     assert ws.estado == "IDLE"
-    assert set(ws.estagios) == {"TASK", "CONTEXT", "OPERATIONS",
-                                "PLAN", "CHANGES", "PREVIEW"}
+    assert set(ws.estagios) == {"TASK", "CONTEXT", "TOOLS",
+                                "OPERATIONS", "PLAN", "CHANGES",
+                                "PREVIEW"}
     assert ws.id.startswith("sessao_")
 
 
@@ -468,8 +469,9 @@ def test_viewport_limite():
 
 def test_workflow_etapas():
     ws = AgentWorkspace("fazer X")
-    assert list(ws.estagios) == ["TASK", "CONTEXT", "OPERATIONS",
-                                 "PLAN", "CHANGES", "PREVIEW"]
+    assert list(ws.estagios) == ["TASK", "CONTEXT", "TOOLS",
+                                 "OPERATIONS", "PLAN", "CHANGES",
+                                 "PREVIEW"]
 
 
 def test_workflow_pipeline():

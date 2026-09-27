@@ -45,6 +45,17 @@ from elixx.studio.preview import (
 )
 from elixx.studio.projeto import ProjetoELiXX
 from elixx.studio.workspace import Workspace
+from elixx.studio.tema import (
+    ELIXX_BORDERS,
+    ELIXX_COLORS,
+    ELIXX_DENSITY,
+    ELIXX_FONTS,
+    ELIXX_METRICS,
+    ELIXX_RADIUS,
+    ELIXX_SPACING,
+    aplicar_tema,
+    validar_tokens,
+)
 from elixx.studio.workspace_ui import (
     ArvoreProjeto,
     ConsoleModelo,
@@ -56,7 +67,9 @@ from elixx.studio.workspace_ui import (
     PreviewModelo,
     StudioWorkspace,
     destacar_lexico,
+    estado_vazio,
     montar_workspace_ui,
+    resumo_status,
 )
 
 __all__ = [
@@ -79,5 +92,8 @@ __all__ = [
     "ArvoreProjeto", "ConsoleModelo", "DiagnosticosModelo",
     "EditorModelo", "InspectorModelo", "Layout", "PainelAgent",
     "PreviewModelo", "StudioWorkspace", "destacar_lexico",
-    "montar_workspace_ui",
+    "estado_vazio", "montar_workspace_ui", "resumo_status",
+    "ELIXX_BORDERS", "ELIXX_COLORS", "ELIXX_DENSITY",
+    "ELIXX_FONTS", "ELIXX_METRICS", "ELIXX_RADIUS",
+    "ELIXX_SPACING", "aplicar_tema", "validar_tokens",
 ]

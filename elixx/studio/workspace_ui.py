@@ -714,6 +714,50 @@ class StudioWorkspace:
 
 # ----- Tk opcional (TUDO lazy; headless intacto) -----
 
+VAZIOS = {
+    "projeto": "(nenhum arquivo)",
+    "preview": "(nada para mostrar)",
+    "inspector": "(nenhum objeto selecionado)",
+    "plano": "(nenhuma tarefa)",
+    "raciocinio": "(nenhuma tarefa)",
+    "console": "ELiXX Studio pronto.",
+}
+"""Empty states (mensagens curtas, sem área vazia muda)."""
+
+
+def estado_vazio(painel: str) -> str:
+    """Mensagem de estado vazio (painel conhecido ou erro)."""
+    try:
+        return VAZIOS[str(painel)]
+    except KeyError:
+        raise ErroELiXX(f'Painel "{painel}" desconhecido.')
+
+
+def resumo_status(projeto=None, arquivo=None, sincronizado=False,
+                  erros=0, prog=None, n_tools=0,
+                  executando=False) -> str:
+    """Texto da statusbar (puro; mesma regra da UI)."""
+    parte_plano = (f"  Agent: {prog['concluidos']}/"
+                   f"{prog['total']} etapas"
+                   if prog and prog["total"] else "")
+    if executando:
+        fase = "Executando"
+    elif erros:
+        fase = "Ready com erros"
+    elif prog is not None and not prog.get("total", 0):
+        fase = "Waiting approval"
+    elif n_tools:
+        fase = f"{n_tools} tools executed"
+    elif sincronizado:
+        fase = "Context ready"
+    else:
+        fase = "Ready"
+    return (f"ELiXX  {projeto or '(nenhum projeto)'}  "
+            f"{arquivo or '(nenhum arquivo)'}  "
+            f"{'● sincronizado' if sincronizado else '○ sem modelo'}  "
+            f"{erros} erro(s){parte_plano}  {fase}")
+
+
 def salvar_layout(ws: StudioWorkspace, relativo: str = ".elixx/layout.json") -> str:
     """Persiste painéis/aba/geometria (só dados locais, sem segredo)."""
     import json
@@ -762,10 +806,15 @@ def montar_workspace_ui(ws: StudioWorkspace):
     janela.geometry(f"{larg}x{alt}")
     janela.minsize(800, 500)
     try:
-        estilo = ttk.Style(janela)
-        estilo.theme_use("clam")  # base consistente e compacta
+        from .tema import aplicar_tema
+
+        aplicar_tema(janela)
     except Exception:
-        pass
+        try:
+            estilo = ttk.Style(janela)
+            estilo.theme_use("clam")
+        except Exception:
+            pass
 
     # -- toolbar real (ações do StudioApp) --
     topo = ttk.Frame(janela)
@@ -825,7 +874,8 @@ def montar_workspace_ui(ws: StudioWorkspace):
     meio.pack(fill="both", expand=True)
 
     esq = ttk.Frame(meio, width=200)
-    ttk.Label(esq, text="PROJECT").pack(anchor="w")
+    ttk.Label(esq, text="PROJECT",
+              style="Header.TLabel").pack(anchor="w", pady=2)
     lista_arq = tk.Listbox(esq)
     lista_arq.pack(fill="both", expand=True)
 
@@ -834,15 +884,12 @@ def montar_workspace_ui(ws: StudioWorkspace):
         diag = ws.diagnosticos.resumo()
         plano = getattr(ws, "plano_view", None)
         prog = plano.progresso() if plano is not None else None
-        parte_plano = (f"  Agent: {prog['concluidos']}/"
-                       f"{prog['total']} etapas"
-                       if prog and prog["total"] else "")
-        barra_status.config(
-            text=f"ELiXX  "
-                 f"{est['projeto'] or '(nenhum projeto)'}  "
-                 f"{app.documentos.ativo or '(nenhum arquivo)'}  "
-                 f"{'● sincronizado' if est['analisando'] else '○ sem modelo'}  "
-                 f"{diag['erros']} erro(s){parte_plano}")
+        trace = getattr(ws, "_trace_tools", None)
+        barra_status.config(text=resumo_status(
+            est["projeto"], app.documentos.ativo,
+            est["analisando"], diag["erros"], prog,
+            len(trace.chamadas) if trace else 0,
+            est["executando"]))
 
     def _recarregar_arvore():
         lista_arq.delete(0, "end")
@@ -862,12 +909,14 @@ def montar_workspace_ui(ws: StudioWorkspace):
                               f"({ent['nome']})")
 
     centro = ttk.Frame(meio)
-    ttk.Label(centro, text="PREVIEW").pack(anchor="w")
+    ttk.Label(centro, text="PREVIEW",
+              style="Header.TLabel").pack(anchor="w", pady=2)
     lista_prev = tk.Listbox(centro)
     lista_prev.pack(fill="both", expand=True)
 
     direita = ttk.Frame(meio, width=240)
-    ttk.Label(direita, text="INSPECTOR").pack(anchor="w")
+    ttk.Label(direita, text="INSPECTOR",
+              style="Header.TLabel").pack(anchor="w", pady=2)
     texto_insp = tk.Text(direita, height=20, width=30)
     texto_insp.pack(fill="both", expand=True)
     meio.add(esq, minsize=140)
@@ -877,7 +926,8 @@ def montar_workspace_ui(ws: StudioWorkspace):
     # -- editor com números + destaque + dirty --
     quadro_ed = ttk.Frame(janela)
     quadro_ed.pack(fill="x")
-    ttk.Label(quadro_ed, text="CODE").pack(anchor="w")
+    ttk.Label(quadro_ed, text="CODE",
+              style="Header.TLabel").pack(anchor="w", pady=2)
     ed_linhas = tk.Text(quadro_ed, width=4, height=10,
                         state="disabled")
     ed_linhas.pack(side="left", fill="y")
@@ -1076,8 +1126,10 @@ def montar_workspace_ui(ws: StudioWorkspace):
     ttk.Button(quadro_plano_btn, text="Revisar",
                command=_plano_revisar).pack(side="left")
     ttk.Button(quadro_plano_btn, text="Aprovar",
+               style="Accent.TButton",
                command=_plano_aprovar).pack(side="left")
     ttk.Button(quadro_plano_btn, text="Cancelar",
+               style="Danger.TButton",
                command=_plano_cancelar).pack(side="left")
 
     # -- seleção preview → inspector via F27 --
@@ -1105,7 +1157,11 @@ def montar_workspace_ui(ws: StudioWorkspace):
     # -- agent: 3 botões reais (F28, sem LLM) --
     quadro_agent = ttk.Frame(direita)
     quadro_agent.pack(fill="x")
-    ttk.Label(quadro_agent, text="AGENT").pack(anchor="w")
+    ttk.Label(quadro_agent, text="ELiXX AGENT",
+              style="Header.TLabel").pack(anchor="w", pady=2)
+    rotulo_provider = ttk.Label(quadro_agent,
+                                text="Provider: MOCK / DETERMINISTIC")
+    rotulo_provider.pack(anchor="w")
     rotulo_ctx = ttk.Label(quadro_agent, text="sem contexto")
     rotulo_ctx.pack(anchor="w")
 
@@ -1182,7 +1238,8 @@ def montar_workspace_ui(ws: StudioWorkspace):
     entrada_chat.bind("<Return>", _chat_enviar)
 
     # -- contexto da tarefa F34 (resumo + detalhe filtrável) --
-    ttk.Label(quadro_agent, text="CONTEXTO DA TAREFA").pack(
+    ttk.Label(quadro_agent, text="CONTEXTO DA TAREFA",
+              style="Header.TLabel").pack(
         anchor="w")
     rotulo_ctx_tarefa = ttk.Label(quadro_agent,
                                   text="sem contexto")
@@ -1311,6 +1368,86 @@ def montar_workspace_ui(ws: StudioWorkspace):
                command=_ctx_construir).pack(fill="x")
     ttk.Button(quadro_agent, text="Ver contexto",
                command=_ctx_ver).pack(fill="x")
+
+    # -- TOOLS (F36: trace determinístico, sem escrita) --
+    ttk.Label(quadro_agent, text="TOOLS",
+              style="Header.TLabel").pack(anchor="w", pady=2)
+    lista_tools = tk.Listbox(quadro_agent, height=4)
+    lista_tools.pack(fill="x")
+
+    def _tools_executar():
+        from .agent.ferramentas_semanticas import (
+            AgentToolCall, SemanticPermissions, SemanticToolRegistry,
+            ToolTrace, executar_chamada)
+
+        sel = ws.preview.selecionado or ""
+        nome = ""
+        if ws.modelo is not None and sel:
+            try:
+                nome = ws.preview.entidades and next(
+                    e["nome"] for e in ws.preview.entidades
+                    if e["id"] == sel) or sel
+            except StopIteration:
+                nome = sel
+        ambiente = _AmbienteTools(ws)
+        registro = SemanticToolRegistry()
+        permissoes = SemanticPermissions(["READ", "ANALYZE"])
+        trace = ToolTrace()
+        for tool_id, args in (
+                ("buscar_entidade", {"nome": nome or "Juh"}),
+                ("consultar_relacoes",
+                 {"id": sel or "personagem:Juh"})):
+            chamada = AgentToolCall(tool_id, args)
+            trace.registrar(chamada)
+            executar_chamada(registro, chamada, ambiente,
+                             permissoes)
+        ws._trace_tools = trace
+        lista_tools.delete(0, "end")
+        for i, chamada in enumerate(trace.chamadas, start=1):
+            marca = "✓" if chamada.estado == "CONCLUIDA" else "×"
+            lista_tools.insert(
+                "end",
+                f"{marca} {chamada.tool_id} "
+                f"[{chamada.estado}]")
+        ws.console.registrar(
+            "AGENT", f"tools: {len(trace.chamadas)} chamadas")
+        _refresh_estado()
+
+    def _tools_detalhe(_evento=None):
+        trace = getattr(ws, "_trace_tools", None)
+        if trace is None:
+            return
+        try:
+            idx = lista_tools.curselection()[0]
+        except Exception:
+            return
+        chamada = trace.chamadas[idx]
+        texto_insp.delete("1.0", "end")
+        texto_insp.insert(
+            "end",
+            f"TOOL\n{chamada.tool_id}\n\n"
+            f"ESTADO\n{chamada.estado}\n\n"
+            f"ARGS\n{chamada.argumentos}\n\n")
+        if chamada.resultado is not None:
+            texto_insp.insert(
+                "end", f"RESULTADO\n"
+                       f"{chamada.resultado.mensagem[:300]}\n")
+
+    lista_tools.bind("<<ListboxSelect>>", _tools_detalhe)
+    ttk.Button(quadro_agent, text="Executar tools",
+               command=_tools_executar).pack(fill="x")
+
+    class _AmbienteTools:
+        """Ambiente só-leitura p/ tools semânticas (sem escrita)."""
+
+        def __init__(self, ws_ref) -> None:
+            self.modelo = ws_ref.modelo
+            self.workspace = ws_ref.app.workspace
+            self.personagens = {}
+            self.contexto = None
+            self.preview = None
+            self.plano_view = None
+            self.rig = None
 
     # -- raciocínio: workflow + grafo 2D (F35, Canvas Tk) --
     RAC = {"espaco": None}

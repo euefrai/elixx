@@ -70,6 +70,16 @@ from elixx.studio.agent.planejamento import (
     preparar_execucao,
     validar_plano,
 )
+from elixx.studio.agent.ferramentas_semanticas import (
+    AgentToolCall,
+    SemanticPermissions,
+    SemanticTool,
+    SemanticToolRegistry,
+    ToolResult,
+    ToolTrace,
+    executar_chamada,
+    executar_sequencia,
+)
 from elixx.studio.agent.workspace import (
     AgentEdge,
     AgentNode,
@@ -120,6 +130,9 @@ __all__ = [
     "Condicao", "PainelPlano", "PlanoTarefa", "construir_plano",
     "diff_semantico_passo", "dry_run", "executar_plano",
     "explicar_plano", "preparar_execucao", "validar_plano",
+    "AgentToolCall", "SemanticPermissions", "SemanticTool",
+    "SemanticToolRegistry", "ToolResult", "ToolTrace",
+    "executar_chamada", "executar_sequencia",
     "AgentEdge", "AgentNode", "AgentWorkspace",
     "transicoes_permitidas",
     "PlanoSemantico", "SemanticContext", "consultar_modelo",
