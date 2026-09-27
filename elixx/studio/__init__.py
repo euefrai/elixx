@@ -45,6 +45,19 @@ from elixx.studio.preview import (
 )
 from elixx.studio.projeto import ProjetoELiXX
 from elixx.studio.workspace import Workspace
+from elixx.studio.workspace_ui import (
+    ArvoreProjeto,
+    ConsoleModelo,
+    DiagnosticosModelo,
+    EditorModelo,
+    InspectorModelo,
+    Layout,
+    PainelAgent,
+    PreviewModelo,
+    StudioWorkspace,
+    destacar_lexico,
+    montar_workspace_ui,
+)
 
 __all__ = [
     "StudioApp",
@@ -63,4 +76,8 @@ __all__ = [
     "TkPreview",
     "ProjetoELiXX",
     "Workspace",
+    "ArvoreProjeto", "ConsoleModelo", "DiagnosticosModelo",
+    "EditorModelo", "InspectorModelo", "Layout", "PainelAgent",
+    "PreviewModelo", "StudioWorkspace", "destacar_lexico",
+    "montar_workspace_ui",
 ]
