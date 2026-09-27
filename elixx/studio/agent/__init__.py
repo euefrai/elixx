@@ -70,6 +70,12 @@ from elixx.studio.agent.planejamento import (
     preparar_execucao,
     validar_plano,
 )
+from elixx.studio.agent.workspace import (
+    AgentEdge,
+    AgentNode,
+    AgentWorkspace,
+    transicoes_permitidas,
+)
 from elixx.studio.agent.loop import (
     PlanoSemantico,
     SemanticContext,
@@ -114,6 +120,8 @@ __all__ = [
     "Condicao", "PainelPlano", "PlanoTarefa", "construir_plano",
     "diff_semantico_passo", "dry_run", "executar_plano",
     "explicar_plano", "preparar_execucao", "validar_plano",
+    "AgentEdge", "AgentNode", "AgentWorkspace",
+    "transicoes_permitidas",
     "PlanoSemantico", "SemanticContext", "consultar_modelo",
     "construir_contexto_semantico", "diff_legivel",
     "executar_loop", "gerar_changeset", "reanalisar_modelo",

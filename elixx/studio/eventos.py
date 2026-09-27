@@ -11,8 +11,12 @@ __all__ = ["EVENTOS", "EventBus"]
 
 EVENTOS = ("arquivo_aberto", "arquivo_alterado", "arquivo_salvo",
            "projeto_aberto", "projeto_fechado", "selecionado",
-           "preview_iniciado", "preview_parado", "erro", "warning")
-"""Eventos conhecidos (novo evento = string registrada, sem código)."""
+           "preview_iniciado", "preview_parado", "erro", "warning",
+           "workspace_created", "stage_changed", "node_selected",
+           "context_updated", "operation_selected",
+           "plan_selected", "change_selected",
+           "preview_requested", "approval_requested")
+"""Eventos conhecidos (F35 soma os do reasoning workspace)."""
 
 
 class EventBus:

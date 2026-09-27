@@ -916,12 +916,29 @@ def montar_workspace_ui(ws: StudioWorkspace):
     texto_detalhe = tk.Text(base, height=4)
     modo_diff = {"modo": "codigo"}
 
+    quadro_grafo = ttk.Frame(base)
+    lista_etapas = tk.Listbox(quadro_grafo, height=6, width=32)
+    lista_etapas.pack(side="left", fill="y")
+    tela_grafo = tk.Canvas(quadro_grafo, height=150,
+                           background="white")
+    tela_grafo.pack(side="left", fill="both", expand=True)
+    entrada_busca = ttk.Entry(base)
+
     def _mostrar_aba(aba: str):
         ws.layout.definir_aba(aba)
         corpo_aba.pack_forget()
         timeline_lista.pack_forget()
         lista_plano.pack_forget()
         texto_detalhe.pack_forget()
+        quadro_grafo.pack_forget()
+        entrada_busca.pack_forget()
+        quadro_zoom.pack_forget()
+        if aba == "raciocinio":
+            _mostrar_raciocinio()
+            entrada_busca.pack(fill="x")
+            quadro_grafo.pack(fill="x")
+            quadro_zoom.pack(fill="x", anchor="w")
+            return
         if aba == "plano":
             _mostrar_plano()
             lista_plano.pack(fill="x")
@@ -950,7 +967,7 @@ def montar_workspace_ui(ws: StudioWorkspace):
             corpo_aba.pack(fill="x")
 
     for aba in ("console", "timeline", "diagnosticos",
-                  "plano"):
+                  "plano", "raciocinio"):
         ttk.Button(botoes_abas, text=aba.capitalize(),
                    command=lambda a=aba: _mostrar_aba(a)).pack(
                        side="left")
@@ -1295,6 +1312,170 @@ def montar_workspace_ui(ws: StudioWorkspace):
     ttk.Button(quadro_agent, text="Ver contexto",
                command=_ctx_ver).pack(fill="x")
 
+    # -- raciocínio: workflow + grafo 2D (F35, Canvas Tk) --
+    RAC = {"espaco": None}
+
+    def _espaco():
+        from .agent.workspace import AgentWorkspace as _AW
+
+        esp = getattr(ws, "raciocinio", None)
+        if not isinstance(esp, _AW):
+            esp = _AW(getattr(ws, "_tarefa_txt", ""))
+            ws.raciocinio = esp
+        RAC["espaco"] = esp
+        return esp
+
+    def _mostrar_raciocinio():
+        esp = _espaco()
+        lista_etapas.delete(0, "end")
+        if not esp.estagios or all(
+                v["estado"] == "pendente"
+                for v in esp.estagios.values()):
+            lista_etapas.insert("end", "(nenhuma tarefa)")
+        marcas = {"pendente": "○", "processando": "◌",
+                  "pronto": "✓", "atencao": "!",
+                  "erro": "×", "atual": "→"}
+        for nome in ("TASK", "CONTEXT", "OPERATIONS", "PLAN",
+                     "CHANGES", "PREVIEW"):
+            info = esp.estagios[nome]
+            lista_etapas.insert(
+                "end",
+                f"[{marcas.get(info['estado'], '?')}] {nome}")
+        _desenhar_grafo()
+
+    def _desenhar_grafo():
+        esp = _espaco()
+        tela_grafo.delete("all")
+        try:
+            largura = int(tela_grafo.winfo_width()) or 400
+            altura = int(tela_grafo.winfo_height()) or 150
+        except Exception:
+            largura, altura = 400, 150
+        zoom = esp.vista["zoom"]
+        ox, oy = esp.vista["pan"]
+        for aresta in esp.arestas:
+            if aresta.origem not in esp.nos or \
+                    aresta.destino not in esp.nos:
+                continue
+            a, b = esp.nos[aresta.origem], esp.nos[aresta.destino]
+            tela_grafo.create_line(
+                (a.x - ox) * zoom + 10, (a.y - oy) * zoom + 10,
+                (b.x - ox) * zoom + 10, (b.y - oy) * zoom + 10,
+                fill="gray")
+        for no in esp.visiveis():
+            x = (no["x"] - ox) * zoom + 10
+            y = (no["y"] - oy) * zoom + 10
+            cor = "lightblue" if no["id"] == esp.selecao \
+                else "white"
+            tela_grafo.create_rectangle(x - 8, y - 8, x + 8, y + 8,
+                                        fill=cor,
+                                        tags=(f"no:{no['id']}",))
+            tela_grafo.create_text(x, y + 18,
+                                   text=no["rotulo"][:14],
+                                   tags=(f"no:{no['id']}",))
+
+    def _grafo_clique(evento):
+        esp = _espaco()
+        zoom = esp.vista["zoom"]
+        ox, oy = esp.vista["pan"]
+        achado = None
+        for no in esp.visiveis():
+            x = (no["x"] - ox) * zoom + 10
+            y = (no["y"] - oy) * zoom + 10
+            if abs(evento.x - x) < 12 and abs(evento.y - y) < 12:
+                achado = no["id"]
+                break
+        if achado is None:
+            return
+        try:
+            detalhe = esp.selecionar(achado)
+            texto_insp.delete("1.0", "end")
+            texto_insp.insert("end", f"{detalhe['id']}\n")
+            for chave in ("tipo", "rotulo", "score"):
+                texto_insp.insert("end",
+                                  f"  {chave}: {detalhe[chave]}\n")
+            for motivo in detalhe.get("motivos", [])[:6]:
+                texto_insp.insert("end", f"  - {motivo}\n")
+            ws.console.registrar("INFO",
+                                 f"Grafo: {achado} selecionado")
+        except ErroELiXX as exc:
+            ws.console.registrar("ERROR", str(exc)[:200])
+        _desenhar_grafo()
+        _refresh_estado()
+
+    def _grafo_duplo(_evento=None):
+        esp = _espaco()
+        if esp.selecao and ws.modelo is not None:
+            try:
+                esp.expandir(esp.selecao, ws.modelo)
+                esp.layout()
+            except ErroELiXX as exc:
+                ws.console.registrar("ERROR", str(exc)[:200])
+        _desenhar_grafo()
+
+    _pan_arrasto = {"x": 0, "y": 0}
+
+    def _pan_ini(evento):
+        _pan_arrasto["x"], _pan_arrasto["y"] = evento.x, evento.y
+
+    def _pan_move(evento):
+        esp = _espaco()
+        zoom = esp.vista["zoom"] or 1.0
+        try:
+            esp.mover_pan(((_pan_arrasto["x"] - evento.x) / zoom),
+                          ((_pan_arrasto["y"] - evento.y) / zoom))
+        except ErroELiXX:
+            pass
+        _pan_arrasto["x"], _pan_arrasto["y"] = evento.x, evento.y
+        _desenhar_grafo()
+
+    tela_grafo.bind("<Button-1>", _grafo_clique)
+    tela_grafo.bind("<Double-Button-1>", _grafo_duplo)
+    tela_grafo.bind("<ButtonPress-2>", _pan_ini)
+    tela_grafo.bind("<B2-Motion>", _pan_move)
+
+    def _grafo_busca(_evento=None):
+        esp = _espaco()
+        termo = entrada_busca.get().strip()
+        if not termo:
+            return
+        try:
+            achados = esp.buscar(termo, ws.modelo)
+        except ErroELiXX as exc:
+            ws.console.registrar("ERROR", str(exc)[:200])
+            return
+        ws.console.registrar(
+            "INFO", f"busca '{termo}': {len(achados)}")
+        if achados:
+            try:
+                esp.selecionar(achados[0]["id"])
+            except ErroELiXX:
+                pass
+        _desenhar_grafo()
+
+    entrada_busca.bind("<Return>", _grafo_busca)
+
+    def _grafo_zoom(direcao: int):
+        esp = _espaco()
+        try:
+            if direcao > 0:
+                esp.aproximar()
+            elif direcao < 0:
+                esp.afastar()
+            else:
+                esp.normalizar_zoom()
+                esp.enquadrar()
+        except ErroELiXX as exc:
+            ws.console.registrar("ERROR", str(exc)[:200])
+        _desenhar_grafo()
+
+    quadro_zoom = ttk.Frame(base)
+    for rotulo, fun in (("+", lambda: _grafo_zoom(1)),
+                        ("-", lambda: _grafo_zoom(-1)),
+                        ("F", lambda: _grafo_zoom(0))):
+        ttk.Button(quadro_zoom, text=rotulo, width=3,
+                   command=fun).pack(side="left")
+
     # -- estado inicial --
     _recarregar_arvore()
     if ws.modelo is not None:
@@ -1339,6 +1520,34 @@ def montar_workspace_ui(ws: StudioWorkspace):
     janela.bind("<Control-Shift-p>", lambda _e: _tecla_comandos())
     janela.bind("<Control-Return>", lambda _e: _tecla_aprovar())
     janela.bind("<Escape>", lambda _e: _tecla_cancelar())
+
+    def _tecla_grafo(_e=None):
+        _mostrar_aba("raciocinio")
+
+    def _tecla_workflow(_e=None):
+        _mostrar_aba("plano")
+
+    def _tecla_enquadrar(_e=None):
+        try:
+            _espaco().enquadrar()
+        except ErroELiXX:
+            pass
+        _desenhar_grafo()
+
+    def _tecla_busca_ctx(_e=None):
+        if ws.layout.aba_inferior == "raciocinio":
+            entrada_busca.focus_set()
+        else:
+            _tecla_busca()
+
+    janela.bind("<Control-Shift-G>", lambda _e: _tecla_grafo())
+    janela.bind("<Control-Shift-g>", lambda _e: _tecla_grafo())
+    janela.bind("<Control-Shift-W>", lambda _e: _tecla_workflow())
+    janela.bind("<Control-Shift-w>", lambda _e: _tecla_workflow())
+    janela.bind("<Control-f>", lambda _e: _tecla_busca_ctx())
+    janela.bind("<Control-F>", lambda _e: _tecla_busca_ctx())
+    janela.bind("f", lambda _e: _tecla_enquadrar())
+    janela.bind("F", lambda _e: _tecla_enquadrar())
 
     def _fechar():
         try:

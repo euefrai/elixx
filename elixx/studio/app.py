@@ -35,6 +35,9 @@ ATALHOS = {
     "Ctrl+Shift+P": "paleta_comandos",
     "Ctrl+Enter": "aprovar",
     "Esc": "cancelar",
+    "Ctrl+Shift+G": "grafo",
+    "Ctrl+Shift+W": "workflow",
+    "F": "enquadrar",
 }
 """Mapa atalho → comando (sem quebrar atalhos do sistema: só dentro)."""
 
