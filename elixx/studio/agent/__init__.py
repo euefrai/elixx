@@ -24,6 +24,15 @@ from elixx.studio.agent.provider import (
     NullAgentProvider,
     StructuredAgentProvider,
 )
+from elixx.studio.agent.contexto_tarefa import (
+    ContextoConfig,
+    ContextoEntidade,
+    ContextoResultado,
+    ContextoTarefa,
+    carregar_preferencias,
+    construir_contexto,
+    salvar_preferencias,
+)
 from elixx.studio.agent.inteligencia import (
     AgentChat,
     IntentContext,
@@ -90,6 +99,9 @@ __all__ = [
     "StructuredAgentProvider",
     "AgentResult",
     "AgentTask", "executar_tarefa",
+    "ContextoConfig", "ContextoEntidade", "ContextoResultado",
+    "ContextoTarefa", "carregar_preferencias",
+    "construir_contexto", "ids_relevantes", "salvar_preferencias",
     "AgentChat", "IntentContext", "IntelligenceProvider",
     "MockIntentProvider", "ProviderRegistry",
     "contexto_de_intencao", "explicar", "intent_para_agentintent",

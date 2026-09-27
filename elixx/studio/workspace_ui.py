@@ -1164,6 +1164,137 @@ def montar_workspace_ui(ws: StudioWorkspace):
                command=_chat_enviar).pack(fill="x")
     entrada_chat.bind("<Return>", _chat_enviar)
 
+    # -- contexto da tarefa F34 (resumo + detalhe filtrável) --
+    ttk.Label(quadro_agent, text="CONTEXTO DA TAREFA").pack(
+        anchor="w")
+    rotulo_ctx_tarefa = ttk.Label(quadro_agent,
+                                  text="sem contexto")
+    rotulo_ctx_tarefa.pack(anchor="w")
+    entrada_objetivo = ttk.Entry(quadro_agent)
+    entrada_objetivo.pack(fill="x")
+    entrada_objetivo.insert(0, "objetivo da tarefa...")
+
+    def _ctx_estado():
+        ctx = getattr(ws, "_ctx_tarefa", None)
+        if ctx is None:
+            return None, "sem contexto"
+        return ctx, (f"{len(ctx.entidades)} entidades, "
+                     f"{len(ctx.relacoes)} relações, "
+                     f"{len(ctx.arquivos)} arquivo(s)")
+
+    def _ctx_construir():
+        from .agent.contexto_tarefa import (
+            ContextoConfig, ContextoTarefa, construir_contexto)
+
+        if ws.modelo is None:
+            ws.console.registrar("ERROR",
+                                 "Sem modelo semântico.")
+            return
+        sel = ws.preview.selecionado or ""
+        objetivo = entrada_objetivo.get().strip()
+        if objetivo in ("", "objetivo da tarefa..."):
+            objetivo = f"inspecionar {sel}" if sel else ""
+        tarefa = ContextoTarefa(
+            objetivo=objetivo, alvo="",
+            entidade_selecionada=sel,
+            arquivo_atual=app.documentos.ativo or "")
+        try:
+            ctx = construir_contexto(ws.modelo, tarefa,
+                                     ContextoConfig())
+        except ErroELiXX as exc:
+            ws.console.registrar("ERROR", str(exc)[:200])
+            return
+        ws._ctx_tarefa = ctx
+        _, texto = _ctx_estado()
+        rotulo_ctx_tarefa.config(text=texto)
+        ws.console.registrar("AGENT", f"contexto: {texto}")
+
+    def _ctx_ver():
+        import tkinter as tk
+
+        ctx, texto = _ctx_estado()
+        if ctx is None:
+            ws.console.registrar("ERROR", "Construa o contexto.")
+            return
+        topo = tk.Toplevel(janela)
+        topo.title("Contexto da tarefa")
+        topo.geometry("520x420")
+        var_filtro = tk.StringVar(value="Todas")
+        categorias = ["Todas"] + sorted(
+            {e.categoria for e in ctx.entidades})
+        tk.OptionMenu(topo, var_filtro, *categorias).pack(
+            anchor="w")
+        lista = tk.Listbox(topo)
+        lista.pack(fill="both", expand=True)
+        detalhe = tk.Text(topo, height=8)
+        detalhe.pack(fill="x")
+
+        def _recarregar():
+            from .agent.contexto_tarefa import ContextoTarefa as _CT
+
+            _ = _CT
+            lista.delete(0, "end")
+            filtro = var_filtro.get()
+            for e in ctx.entidades:
+                if filtro != "Todas" and e.categoria != filtro:
+                    continue
+                marca = "✓" if e.origem == "manual" else "•"
+                lista.insert("end",
+                             f"{marca} {e.id} [{e.categoria}] "
+                             f"{e.score:.2f}")
+
+        def _mostrar(_ev=None):
+            try:
+                item = lista.get(lista.curselection())
+            except Exception:
+                return
+            eid = item.split(" ", 2)[1]
+            try:
+                motivos = ctx.por_que(eid)
+            except ErroELiXX:
+                return
+            ent = next(e for e in ctx.entidades if e.id == eid)
+            detalhe.delete("1.0", "end")
+            detalhe.insert(
+                "end",
+                f"{ent.id}\n{ent.tipo} · {ent.arquivo}\n"
+                f"score {ent.score:.2f} · origem {ent.origem}\n"
+                + "".join(f"- {m}\n" for m in motivos))
+
+        def _alternar(incluir: bool):
+            try:
+                item = lista.get(lista.curselection())
+            except Exception:
+                return
+            eid = item.split(" ", 2)[1]
+            for e in ctx.entidades:
+                if e.id == eid:
+                    e.origem = "manual"
+                    ws.console.registrar(
+                        "AGENT",
+                        f"{'incluído' if incluir else 'excluído'}: "
+                        f"{eid} (registrado; reconstrua p/ aplicar)")
+                    break
+            _recarregar()
+
+        lista.bind("<<ListboxSelect>>", _mostrar)
+        var_filtro.trace_add(
+            "write", lambda *_a: _recarregar())
+        linha_btn = tk.Frame(topo)
+        linha_btn.pack(fill="x")
+        tk.Button(linha_btn, text="Incluir",
+                  command=lambda: _alternar(True)).pack(
+                      side="left")
+        tk.Button(linha_btn, text="Excluir",
+                  command=lambda: _alternar(False)).pack(
+                      side="left")
+        _recarregar()
+
+    ttk.Button(quadro_agent, text="Construir contexto",
+               command=_ctx_construir).pack(fill="x")
+    ttk.Button(quadro_agent, text="Ver contexto",
+               command=_ctx_ver).pack(fill="x")
+
     # -- estado inicial --
     _recarregar_arvore()
     if ws.modelo is not None:
