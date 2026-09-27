@@ -36,6 +36,19 @@ from elixx.studio.agent.inteligencia import (
     intent_para_ferramentas,
     validar_intent,
 )
+from elixx.studio.agent.operacoes import (
+    SemanticEventOperation,
+    SemanticOperation,
+    SemanticReference,
+    explicar_operacao,
+    intent_para_operacao,
+    operacao_para_ferramentas,
+    operacao_para_intent,
+    operacao_para_proposta,
+    resolver_referencia,
+    snippet_evento,
+    validar_operacao,
+)
 from elixx.studio.agent.loop import (
     PlanoSemantico,
     SemanticContext,
@@ -69,6 +82,11 @@ __all__ = [
     "MockIntentProvider", "ProviderRegistry",
     "contexto_de_intencao", "explicar", "intent_para_agentintent",
     "intent_para_ferramentas", "validar_intent",
+    "SemanticEventOperation", "SemanticOperation",
+    "SemanticReference", "explicar_operacao",
+    "intent_para_operacao", "operacao_para_ferramentas",
+    "operacao_para_intent", "operacao_para_proposta",
+    "resolver_referencia", "snippet_evento", "validar_operacao",
     "PlanoSemantico", "SemanticContext", "consultar_modelo",
     "construir_contexto_semantico", "diff_legivel",
     "executar_loop", "gerar_changeset", "reanalisar_modelo",
