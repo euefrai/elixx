@@ -929,6 +929,50 @@ def montar_workspace_ui(ws: StudioWorkspace):
     ttk.Button(quadro_agent, text="Planejar/Propor",
                command=_agent_planejar_propor).pack(fill="x")
 
+    # -- chat do Agent (F30: Mock/determinístico, sem LLM) --
+    ttk.Label(quadro_agent, text="ELiXX AGENT (mock)").pack(
+        anchor="w")
+    hist_chat = tk.Text(quadro_agent, height=8, width=28)
+    hist_chat.pack(fill="x")
+    entrada_chat = ttk.Entry(quadro_agent)
+    entrada_chat.pack(fill="x")
+
+    def _chat_enviar(_evento=None):
+        from .agent.inteligencia import AgentChat
+
+        pedido = entrada_chat.get().strip()
+        if not pedido:
+            return
+        entrada_chat.delete(0, "end")
+        chat = getattr(ws, "_chat", None)
+        if chat is None:
+            chat = AgentChat()
+            ws._chat = chat
+        resposta = chat.enviar(pedido, ws.modelo)
+        hist_chat.insert("end", f"Você: {pedido}\n")
+        if resposta.get("ok"):
+            inter = resposta["intencao"]
+            hist_chat.insert(
+                "end",
+                f"Intent: ação={inter['acao']} "
+                f"alvo={inter['alvo']} "
+                f"params={inter['parametros']}\n"
+                f"Plano: resolução="
+                f"{resposta['resolucao'].get('status', '?')} "
+                f"(Propor alteração na aba Agent)\n")
+        else:
+            hist_chat.insert(
+                "end",
+                f"Não suportado "
+                f"({resposta.get('codigo', '?')}): "
+                f"{resposta.get('motivo', '')[:120]}\n")
+        hist_chat.see("end")
+        ws.console.registrar("AGENT", f"chat: {pedido[:80]}")
+
+    ttk.Button(quadro_agent, text="→",
+               command=_chat_enviar).pack(fill="x")
+    entrada_chat.bind("<Return>", _chat_enviar)
+
     # -- estado inicial --
     _recarregar_arvore()
     if ws.modelo is not None:

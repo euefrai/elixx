@@ -24,6 +24,18 @@ from elixx.studio.agent.provider import (
     NullAgentProvider,
     StructuredAgentProvider,
 )
+from elixx.studio.agent.inteligencia import (
+    AgentChat,
+    IntentContext,
+    IntelligenceProvider,
+    MockIntentProvider,
+    ProviderRegistry,
+    contexto_de_intencao,
+    explicar,
+    intent_para_agentintent,
+    intent_para_ferramentas,
+    validar_intent,
+)
 from elixx.studio.agent.loop import (
     PlanoSemantico,
     SemanticContext,
@@ -53,6 +65,10 @@ __all__ = [
     "StructuredAgentProvider",
     "AgentResult",
     "AgentTask", "executar_tarefa",
+    "AgentChat", "IntentContext", "IntelligenceProvider",
+    "MockIntentProvider", "ProviderRegistry",
+    "contexto_de_intencao", "explicar", "intent_para_agentintent",
+    "intent_para_ferramentas", "validar_intent",
     "PlanoSemantico", "SemanticContext", "consultar_modelo",
     "construir_contexto_semantico", "diff_legivel",
     "executar_loop", "gerar_changeset", "reanalisar_modelo",
