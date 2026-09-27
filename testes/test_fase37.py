@@ -460,8 +460,8 @@ def test_changes_rejeicao():
 def test_layouts_nomes():
     from elixx.studio.workspace_ui import LAYOUTS, aplicar_layout_nome
 
-    assert set(LAYOUTS) == {"DEFAULT", "FOCUS_AGENT",
-                            "FOCUS_CODE", "FOCUS_PREVIEW"}
+    assert set(LAYOUTS) >= {"DEFAULT", "FOCUS_AGENT",
+                             "FOCUS_CODE", "FOCUS_PREVIEW"}
     assert callable(aplicar_layout_nome)
 
 

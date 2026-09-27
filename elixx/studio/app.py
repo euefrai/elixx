@@ -43,6 +43,7 @@ ATALHOS = {
     "Ctrl+2": "layout_agent",
     "Ctrl+3": "layout_code",
     "Ctrl+4": "layout_preview",
+    "Ctrl+Shift+F": "foco_atual",
 }
 """Mapa atalho → comando (sem quebrar atalhos do sistema: só dentro)."""
 

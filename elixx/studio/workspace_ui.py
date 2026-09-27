@@ -545,8 +545,8 @@ class PainelAgent:
 class ConsoleModelo:
     """Logs com categoria (INFO/WARNING/ERROR/AGENT/BUILD/PREVIEW)."""
 
-    CATEGORIAS = ("INFO", "WARNING", "ERROR", "AGENT", "BUILD",
-                  "PREVIEW")
+    CATEGORIAS = ("INFO", "SUCCESS", "WARNING", "ERROR",
+                  "AGENT", "BUILD", "PREVIEW")
 
     def __init__(self, app) -> None:
         from .app import StudioApp
@@ -767,8 +767,13 @@ LAYOUTS = {
     "FOCUS_CODE": ("project", "editor", "console", "diagnosticos",
                    "agent"),
     "FOCUS_PREVIEW": ("preview", "inspector", "console", "agent"),
+    "CODE": ("project", "editor", "console", "diagnosticos", "agent"),
+    "SCENE": ("project", "preview", "inspector", "console"),
+    "AGENT": ("project", "preview", "agent", "console"),
+    "REVIEW": ("editor", "preview", "inspector", "console",
+               "diagnosticos"),
 }
-"""Presets F37 (painéis visíveis; sem tamanho fixo frágil)."""
+"""Presets F37 (+ adaptativos F39 CODE/SCENE/AGENT/REVIEW)."""
 
 
 def aplicar_layout_nome(ws: StudioWorkspace, nome: str
