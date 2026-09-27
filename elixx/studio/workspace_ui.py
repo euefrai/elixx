@@ -856,15 +856,53 @@ def montar_workspace_ui(ws: StudioWorkspace):
                  else "● erro" if est["erro"] else "● parado")
         sufixo = "" if est["salvo"] else " ● pendente"
         estado_lbl.config(text=marca + sufixo)
+        if "salvar" in botoes_topo:
+            botoes_topo["salvar"].config(
+                text="Salvar ●" if sufixo else "Salvar")
+        if "parar" in botoes_topo:
+            botoes_topo["parar"].config(
+                style="Danger.TButton" if est["executando"]
+                else "TButton")
 
     def _cmd(nome, alvo=""):
         from .comandos import StudioCommand
 
         try:
             app.executar_comando(StudioCommand(nome, alvo))
+            if nome == "salvar" and alvo:
+                _sincronizar_apos_salvar(alvo)
+                if alvo in ws.editores:
+                    _mostrar_editor(ws.editores[alvo])
+                _recarregar_arvore()
         except ErroELiXX as exc:
             ws.console.registrar("ERROR", str(exc)[:200])
         _refresh_estado()
+
+    def _sincronizar_apos_salvar(caminho: str) -> None:
+        """Salvar → reparse → modelo → preview → inspector."""
+        from .ux import AbasEditor  # noqa (uso do tipo no docstring)
+
+        _ = AbasEditor
+        try:
+            texto = ws.app.workspace.resolver(
+                caminho).read_text(encoding="utf-8")
+        except OSError as exc:
+            ws.console.registrar("ERROR", f"Ilegível: {exc}")
+            return
+        try:
+            from .modelo.adaptador import atualizar_arquivo
+
+            if ws.modelo is not None:
+                atualizar_arquivo(ws.modelo, caminho, texto)
+                ws.arvore.atualizar(ws.modelo)
+        except ErroELiXX as exc:
+            ws.console.registrar("ERROR", str(exc)[:200])
+            return
+        try:
+            ws.preview.executar(texto, caminho)
+        except ErroELiXX as exc:
+            ws.console.registrar("ERROR", str(exc)[:200])
+        ws.console.registrar("INFO", f"Sincronizado: {caminho}")
 
     barra_status = ttk.Label(janela, text="ELiXX",
                                anchor="w")
@@ -880,15 +918,22 @@ def montar_workspace_ui(ws: StudioWorkspace):
             barra_status.config(text=f"ELiXX — {texto}")
         return _entra
 
+    botoes_topo = {}
     for rotulo, nome in (("Salvar", "salvar"),
                          ("Executar", "executar"),
                          ("Parar", "parar")):
+        estilo = "Accent.TButton" if nome == "executar" else None
         botao = ttk.Button(topo, text=rotulo,
                            command=lambda n=nome: _cmd(
-                               n, app.documentos.ativo or ""))
+                               n, app.documentos.ativo or ""),
+                           **({"style": estilo} if estilo else {}))
         botao.pack(side="left", padx=2)
         botao.bind("<Enter>", _dica(dicas[rotulo]))
         botao.bind("<Leave>", lambda _e: _refresh_barra())
+        botoes_topo[nome] = botao
+    ttk.Separator(topo, orient="vertical").pack(side="left",
+                                                fill="y",
+                                                padx=4)
     ttk.Button(topo, text="Compacto",
                command=lambda: (ws.layout.definir_compacto(
                    not ws.layout.compacto),
@@ -957,6 +1002,27 @@ def montar_workspace_ui(ws: StudioWorkspace):
     lista_arq = tk.Listbox(esq)
     lista_arq.pack(fill="both", expand=True)
 
+    def _abrir_duplo(_evento=None):
+        try:
+            item = lista_arq.get(lista_arq.curselection())
+        except Exception:
+            return
+        for no in ws.arvore.nos():
+            if no["nome"] in item and \
+                    no["tipo"] == "arquivo":
+                try:
+                    ed = ws.abrir_no_editor(no["caminho"])
+                    _mostrar_editor(ed)
+                    ws.console.registrar(
+                        "INFO", f"Aberto: {no['caminho']}")
+                except ErroELiXX as exc:
+                    ws.console.registrar("ERROR",
+                                         str(exc)[:200])
+                break
+        _refresh_estado()
+
+    lista_arq.bind("<Double-Button-1>", _abrir_duplo)
+
     def _refresh_barra():
         est = ws.estado()
         diag = ws.diagnosticos.resumo()
@@ -970,14 +1036,19 @@ def montar_workspace_ui(ws: StudioWorkspace):
             est["executando"]))
 
     def _recarregar_arvore():
+        from .ux import formatar_arvore
+
         lista_arq.delete(0, "end")
         nos = ws.arvore.nos()
         if not nos:
             lista_arq.insert("end", "(nenhum arquivo)")
             return
-        for no in nos:
-            lista_arq.insert("end",
-                             f"[{no['tipo']}] {no['nome']}")
+        sujos = [c for c, e in ws.editores.items()
+                 if e.modificado()] if hasattr(ws, "editores") \
+            else []
+        atual = app.documentos.ativo
+        for linha in formatar_arvore(nos, atual, sujos):
+            lista_arq.insert("end", linha)
 
     def _recarregar_preview():
         lista_prev.delete(0, "end")
@@ -1000,15 +1071,57 @@ def montar_workspace_ui(ws: StudioWorkspace):
                        modo_prev.update(modo=m),
                        rotulo_modo.config(text=f"Modo: {m}"))
                    ).pack(side="left", padx=1)
+    zoom_prev = {"nivel": 100}
+    rotulo_zoom = ttk.Label(barra_prev, text="100%")
+    rotulo_zoom.pack(side="left", padx=4)
+
+    def _zoom_trocar(nivel):
+        from .ux import ZOOM_NIVEIS
+
+        if nivel not in ZOOM_NIVEIS:
+            return
+        zoom_prev["nivel"] = nivel
+        rotulo_zoom.config(text=(f"{nivel}%"
+                                 if nivel != "Ajustar"
+                                 else "Ajustar"))
+        try:
+            tamanho = max(7, min(16, 9 + (nivel - 100) // 25)) \
+                if nivel != "Ajustar" else 9
+            lista_prev.config(font=("Segoe UI", tamanho))
+        except Exception:
+            pass
+        ws.console.registrar("INFO", f"Preview: zoom {nivel}")
+
+    tk.OptionMenu(barra_prev, tk.StringVar(value="100%"),
+                  "50%", "75%", "100%", "125%", "150%",
+                  "Ajustar",
+                  command=lambda v: _zoom_trocar(
+                      int(v[:-1]) if v != "Ajustar" else v)
+                  ).pack(side="left", padx=2)
     ttk.Button(barra_prev, text="Executar",
                style="Accent.TButton",
-               command=lambda: _cmd(
-                   "executar", app.documentos.ativo or "")
+               command=lambda: (_cmd(
+                   "executar", app.documentos.ativo or ""),
+                   rotulo_prev_status.config(
+                       text="executando" if app.preview.rodando
+                       else "parado"))
                ).pack(side="right", padx=2)
     rotulo_prev_status = ttk.Label(centro, text="parado")
     rotulo_prev_status.pack(anchor="w")
-    lista_prev = tk.Listbox(centro)
+    quadro_viewport = ttk.Frame(centro, relief="flat", borderwidth=1)
+    quadro_viewport.pack(fill="both", expand=True, padx=4, pady=4)
+    lista_prev = tk.Listbox(quadro_viewport)
     lista_prev.pack(fill="both", expand=True)
+    try:
+        from .tema import ELIXX_COLORS
+
+        lista_prev.config(background=ELIXX_COLORS["surface"],
+                          foreground=ELIXX_COLORS["text"],
+                          selectbackground=ELIXX_COLORS[
+                              "selection"],
+                          highlightthickness=0, borderwidth=0)
+    except Exception:
+        pass
 
     direita = ttk.Frame(meio, width=240)
     ttk.Label(direita, text="INSPECTOR",
@@ -1062,11 +1175,48 @@ def montar_workspace_ui(ws: StudioWorkspace):
     ed_linhas.pack(side="left", fill="y")
     ed_texto = tk.Text(quadro_ed, height=10, wrap="none")
     ed_texto.pack(side="left", fill="both", expand=True)
-    ed_texto.tag_config("palavra", foreground="blue")
-    ed_texto.tag_config("string", foreground="green")
-    ed_texto.tag_config("numero", foreground="purple")
+    try:
+        from .tema import ELIXX_COLORS
+
+        ed_texto.tag_config("palavra", foreground="#8ab8ff")
+        ed_texto.tag_config("string", foreground="#7ce0a3")
+        ed_texto.tag_config("numero", foreground="#d8a0ff")
+        ed_texto.tag_config("nome", foreground="#e8e8f0",
+                            font=("Consolas", 9, "bold"))
+        ed_texto.config(background=ELIXX_COLORS["surface"],
+                        foreground=ELIXX_COLORS["text"],
+                        insertbackground=ELIXX_COLORS["text"],
+                        highlightthickness=0, borderwidth=0)
+        ed_linhas.config(background=ELIXX_COLORS["background"],
+                         foreground=ELIXX_COLORS["text_muted"],
+                         highlightthickness=0, borderwidth=0)
+    except Exception:
+        ed_texto.tag_config("palavra", foreground="blue")
+        ed_texto.tag_config("string", foreground="green")
+        ed_texto.tag_config("numero", foreground="purple")
+        ed_texto.tag_config("nome", foreground="black")
+
+    # abas de arquivo (uma por documento aberto)
+    quadro_abas_ed = ttk.Frame(quadro_ed)
+    quadro_abas_ed.pack(side="left", fill="y")
+
+    def _recarregar_abas_ed():
+        from .ux import AbasEditor
+
+        abas = AbasEditor(app.documentos)
+        for filho in quadro_abas_ed.winfo_children():
+            filho.destroy()
+        for item in abas.lista():
+            ttk.Button(
+                quadro_abas_ed, text=item["cabecalho"], width=16,
+                command=lambda c=item["caminho"]: (
+                    ws.abrir_no_editor(c),
+                    _mostrar_editor(ws.abrir_no_editor(c)))
+            ).pack(anchor="w", padx=1, pady=1)
 
     def _mostrar_editor(editor: EditorModelo):
+        from .ux import destacar_semantico
+
         ed_texto.delete("1.0", "end")
         ed_texto.insert("1.0", editor.documento.texto)
         ed_linhas.config(state="normal")
@@ -1074,13 +1224,18 @@ def montar_workspace_ui(ws: StudioWorkspace):
         ed_linhas.insert("1.0", "\n".join(
             str(i + 1) for i in range(editor.documento.linhas())))
         ed_linhas.config(state="disabled")
-        for tag in ("palavra", "string", "numero"):
+        for tag in ("palavra", "string", "numero", "nome"):
             ed_texto.tag_remove(tag, "1.0", "end")
-        for ini, fim, classe in editor.destaque():
+        try:
+            marcas = destacar_semantico(editor.documento.texto)
+        except ErroELiXX:
+            marcas = editor.destaque()
+        for ini, fim, classe in marcas:
             ed_texto.tag_add(classe, f"1.0+{ini}c",
                              f"1.0+{fim}c")
         janela.title("ELiXX Studio" + (" ●" if editor.modificado()
                                        else ""))
+        _recarregar_abas_ed()
 
     # -- abas inferiores --
     base = ttk.Frame(janela)
@@ -1271,15 +1426,54 @@ def montar_workspace_ui(ws: StudioWorkspace):
         try:
             ent = ws.preview.selecionar(ent_id)
             secoes = ws.inspector.inspecionar(ws.modelo, ent_id)
-            texto_insp.delete("1.0", "end")
-            for s in secoes:
-                texto_insp.insert("end", f"{s['titulo']}\n")
-                for k, v in s["campos"].items():
-                    texto_insp.insert("end", f"  {k}: {v}\n")
+            _render_inspetor(secoes)
             ws.console.registrar("INFO", f"Selecionado: {ent_id}")
         except ErroELiXX as exc:
             ws.console.registrar("ERROR", str(exc)[:200])
         _refresh_estado()
+
+    def _render_inspetor(secoes: list) -> None:
+        from .ux import SecaoInspector
+
+        ws._secoes_insp = [SecaoInspector(s["titulo"],
+                                         s["campos"])
+                           for s in secoes]
+        texto_insp.delete("1.0", "end")
+        for idx, sec in enumerate(ws._secoes_insp):
+            marca = "▾" if sec.aberta else "▸"
+            texto_insp.insert("end", f"{marca} {sec.titulo}\n",
+                              (f"sec_{idx}",))
+            texto_insp.tag_bind(
+                f"sec_{idx}", "<Button-1>",
+                lambda _e, i=idx: _alternar_secao(i))
+            if sec.aberta:
+                for k, v in sec.campos.items():
+                    texto_insp.insert("end", f"  {k}: {v}\n")
+
+    def _alternar_secao(indice: int) -> None:
+        from .ux import SecaoInspector
+
+        secoes = getattr(ws, "_secoes_insp", [])
+        if 0 <= indice < len(secoes):
+            abertas = [s.aberta for s in secoes]
+            abertas[indice] = not abertas[indice]
+            dados = [{"titulo": s.titulo, "campos": s.campos}
+                     for s in secoes]
+            ws._secoes_insp = [SecaoInspector(
+                d["titulo"], d["campos"], aberta=a)
+                for d, a in zip(dados, abertas)]
+            texto_insp.delete("1.0", "end")
+            for idx, sec in enumerate(ws._secoes_insp):
+                marca = "▾" if sec.aberta else "▸"
+                texto_insp.insert("end", f"{marca} {sec.titulo}\n",
+                                  (f"sec_{idx}",))
+                texto_insp.tag_bind(
+                    f"sec_{idx}", "<Button-1>",
+                    lambda _e, i=idx: _alternar_secao(i))
+                if sec.aberta:
+                    for k, v in sec.campos.items():
+                        texto_insp.insert("end",
+                                          f"  {k}: {v}\n")
 
     lista_prev.bind("<<ListboxSelect>>", _ao_selecionar_prev)
 
@@ -1327,6 +1521,13 @@ def montar_workspace_ui(ws: StudioWorkspace):
             info = ws.agent.planejar(ws.modelo, sel, None,
                                      "alteração via Studio")
             ws.console.registrar("AGENT", f"plano: {info}")
+            if info.get("status") == "plano":
+                hist_chat.insert(
+                    "end",
+                    f"Proposta: alvo={info['alvo']} "
+                    f"({len(info['entidades'])} entidades). "
+                    f"Revise na aba Plano; nada foi aplicado.\n")
+                hist_chat.see("end")
         except ErroELiXX as exc:
             ws.console.registrar("ERROR", str(exc)[:200])
         _refresh_estado()
@@ -1846,6 +2047,15 @@ def montar_workspace_ui(ws: StudioWorkspace):
 
     janela.bind("<Control-k>", lambda _e: _palette())
     janela.bind("<Control-K>", lambda _e: _palette())
+    janela.bind("<Control-s>",
+                lambda _e: _cmd("salvar",
+                                app.documentos.ativo or ""))
+    janela.bind("<Control-S>",
+                lambda _e: _cmd("salvar",
+                                app.documentos.ativo or ""))
+    janela.bind("<F5>", lambda _e: _cmd(
+        "executar", app.documentos.ativo or ""))
+    janela.bind("<Shift-F5>", lambda _e: _cmd("parar"))
     janela.bind("<Control-p>", lambda _e: _tecla_busca())
     janela.bind("<Control-P>", lambda _e: _tecla_busca())
     janela.bind("<Control-Shift-P>", lambda _e: _tecla_comandos())

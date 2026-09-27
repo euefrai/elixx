@@ -45,6 +45,15 @@ from elixx.studio.preview import (
 )
 from elixx.studio.projeto import ProjetoELiXX
 from elixx.studio.workspace import Workspace
+from elixx.studio.ux import (
+    AbasEditor,
+    SecaoInspector,
+    ZOOM_NIVEIS,
+    cabecalho_arquivo,
+    destacar_semantico,
+    formatar_arvore,
+    resumo_agente,
+)
 from elixx.studio.tema import (
     ELIXX_BORDERS,
     ELIXX_COLORS,
@@ -96,4 +105,7 @@ __all__ = [
     "ELIXX_BORDERS", "ELIXX_COLORS", "ELIXX_DENSITY",
     "ELIXX_FONTS", "ELIXX_METRICS", "ELIXX_RADIUS",
     "ELIXX_SPACING", "aplicar_tema", "validar_tokens",
+    "AbasEditor", "SecaoInspector", "ZOOM_NIVEIS",
+    "cabecalho_arquivo", "destacar_semantico",
+    "formatar_arvore", "resumo_agente",
 ]

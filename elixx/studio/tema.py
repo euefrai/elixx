@@ -16,6 +16,8 @@ from ..erros import ErroELiXX
 __all__ = [
     "ELIXX_COLORS", "ELIXX_FONTS", "ELIXX_SPACING", "ELIXX_RADIUS",
     "ELIXX_BORDERS", "ELIXX_DENSITY", "ELIXX_METRICS",
+    "ELIXX_GAP", "ELIXX_FONT_SIZE", "ELIXX_LINE_HEIGHT",
+    "ELIXX_PANEL_WIDTH", "ELIXX_TOOLBAR_HEIGHT",
     "validar_tokens", "aplicar_tema",
 ]
 
@@ -74,6 +76,37 @@ ELIXX_METRICS = {
     "altura_editor_min": 120, "altura_console": 110,
 }
 """Métricas de layout (mínimos testados em 800x500)."""
+
+ELIXX_COLORS["surface_elevated"] = "#232330"
+ELIXX_COLORS["surface_hover"] = "#2a2a38"
+ELIXX_COLORS["surface_active"] = "#37335c"
+ELIXX_COLORS["danger"] = "#e06c6c"
+"""F38: superfícies de elevação/hover/ativo + danger (mesma base)."""
+
+ELIXX_GAP = {
+    "xs": 2, "sm": 4, "md": 8, "lg": 12,
+}
+"""Intervalos entre blocos (compacto por padrão)."""
+
+ELIXX_FONT_SIZE = {
+    "titulo": 13, "section": 10, "label": 9, "body": 9,
+    "code": 9, "caption": 8,
+}
+"""Tamanhos em pt (espelham ELIXX_FONTS; sem número solto na UI)."""
+
+ELIXX_LINE_HEIGHT = {
+    "titulo": 18, "section": 14, "label": 12, "body": 12,
+    "code": 13, "caption": 11,
+}
+"""Altura de linha por estilo (legibilidade sem aperto)."""
+
+ELIXX_PANEL_WIDTH = {
+    "project": 220, "inspector": 240, "agent_min": 260,
+}
+"""Larguras de referência (mínimos funcionais)."""
+
+ELIXX_TOOLBAR_HEIGHT = 32
+"""Altura da barra superior (compacta e fixa)."""
 
 
 def validar_tokens() -> dict:

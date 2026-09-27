@@ -29,15 +29,25 @@ COMANDOS_PALETTE = (
     ("abrir_preview", "Abrir Preview"),
     ("abrir_inspector", "Abrir Inspector"),
     ("abrir_arquivo", "Abrir arquivo"),
+    ("abrir_codigo", "Abrir código"),
+    ("mostrar_preview", "Mostrar Preview"),
+    ("mostrar_inspector", "Mostrar Inspector"),
+    ("focar_agent", "Focar Agent"),
+    ("focar_codigo", "Focar código"),
+    ("focar_preview", "Focar Preview"),
     ("executar_projeto", "Executar projeto"),
     ("parar_projeto", "Parar projeto"),
+    ("salvar", "Salvar"),
+    ("executar", "Executar"),
+    ("parar", "Parar"),
+    ("alternar_compacto", "Alternar modo compacto"),
+    ("alternar_layout", "Alternar layout"),
     ("nova_sessao", "Nova sessão do Agent"),
     ("consultar_contexto", "Consultar contexto"),
     ("mostrar_tools", "Mostrar ferramentas"),
     ("mostrar_plano", "Mostrar plano"),
     ("mostrar_changes", "Mostrar mudanças"),
     ("mostrar_raciocinio", "Mostrar raciocínio"),
-    ("alternar_compacto", "Alternar modo compacto"),
     ("atualizar_modelo", "Atualizar modelo"),
     ("sincronizar_projeto", "Sincronizar projeto"),
     ("inspecionar_selecao", "Inspecionar seleção"),
@@ -291,9 +301,31 @@ class CommandPalette:
                    "atualizar_modelo", "sincronizar_projeto",
                    "nova_sessao", "consultar_contexto",
                    "mostrar_tools", "mostrar_plano",
-                   "mostrar_changes"):
+                   "mostrar_changes", "abrir_codigo",
+                   "mostrar_preview", "mostrar_inspector",
+                   "focar_agent", "focar_codigo",
+                   "focar_preview", "alternar_layout"):
             return {"ok": True, "comando": cid,
                     "nota": "navegação/ação via UI ou API dedicada"}
+        if cid in ("salvar", "executar", "parar"):
+            from ..comandos import StudioCommand
+
+            alvo = args.get("alvo", "")
+            if cid == "salvar" and not alvo:
+                alvo = app.documentos.ativo or ""
+            return app.executar_comando(StudioCommand(cid,
+                                                     alvo))
+        if cid == "abrir_arquivo":
+            alvo = str(args.get("alvo", ""))
+            if not alvo:
+                raise ErroELiXX('Comando "abrir_arquivo" exige '
+                                "alvo.")
+            caminho = app.workspace.resolver(alvo)
+            if not caminho.is_file():
+                raise ErroELiXX(f'Arquivo "{alvo}" ausente.')
+            app.documentos.abrir(
+                alvo, caminho.read_text(encoding="utf-8"))
+            return {"ok": True, "comando": cid, "alvo": alvo}
         if cid in ("abrir_arquivo", "inspecionar_selecao",
                    "consultar_entidade", "mostrar_codigo",
                    "mostrar_relacoes", "adicionar_contexto",

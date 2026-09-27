@@ -173,7 +173,7 @@ def test_sessao_dict():
 
 def test_palette_busca():
     pal = CommandPalette()
-    assert len(pal.buscar("")) == 20
+    assert len(pal.buscar("")) == 30  # F38 soma 10 comandos
     ids = [c["id"] for c in pal.buscar("plano")]
     assert "mostrar_plano" in ids
     assert pal.buscar("zzz-nada") == []
@@ -182,7 +182,7 @@ def test_palette_busca():
 def test_palette_case():
     pal = CommandPalette()
     assert [c["id"] for c in pal.buscar("PREVIEW")] == \
-        ["abrir_preview"]
+        ["abrir_preview", "mostrar_preview", "focar_preview"]
 
 
 def test_palette_acento():
@@ -849,7 +849,7 @@ def test_layouts_todos():
 
 
 def test_palette_total():
-    assert len(CommandPalette().buscar("")) == 20
+    assert len(CommandPalette().buscar("")) == 30  # F38 soma 10
 
 
 def test_sessao_conversas():
@@ -958,9 +958,10 @@ def test_sessao_system_tool():
 
 def test_palette_todas():
     pal = CommandPalette()
-    assert len(pal.buscar("")) == 20
+    assert len(pal.buscar("")) == 30  # F38 soma 10
     for cmd in ("abrir_arquivo", "nova_sessao",
-                "alternar_compacto", "mostrar_raciocinio"):
+                "alternar_compacto", "mostrar_raciocinio",
+                "abrir_codigo", "focar_agent"):
         assert cmd in [c["id"] for c in pal.buscar("")]
 
 
