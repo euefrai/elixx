@@ -25,18 +25,19 @@ PAINEIS = ("project", "editor", "preview", "inspector", "console",
 """Painéis do workspace (visibilidade alternável)."""
 
 ABAS_INFERIORES = ("console", "timeline", "diagnosticos",
-                     "plano")
-"""Abas da faixa inferior (uma ativa por vez; F33 soma plano)."""
+                     "plano", "raciocinio")
+"""Abas da faixa inferior (F33 soma plano; F37, raciocínio)."""
+
+GEOMETRIAS_OK = ((800, 500), (1024, 768), (1280, 720), (1366, 768),
+                 (1600, 900), (1920, 1080), (2560, 1440),
+                 (3840, 2160))
+"""Resoluções verificadas (conteúdo útil, sem sobreposição)."""
 
 PALAVRAS_CHAVE = ("janela", "tela", "personagem", "parte", "pose",
                   "expressao", "animacao", "componente", "estado",
                   "tema", "funcao", "acao", "importar", "dados",
                   "item", "mundo", "navegacao")
 """Destaque lexical (sem parser novo; ELiXX não tem comentários)."""
-
-GEOMETRIAS_OK = ((800, 500), (1024, 768), (1280, 720), (1366, 768),
-                 (1920, 1080))
-"""Resoluções verificadas (mínimo 800x500; sem sobreposição)."""
 
 
 def _e_dado(valor, prof: int = 0) -> bool:
@@ -758,6 +759,32 @@ def resumo_status(projeto=None, arquivo=None, sincronizado=False,
             f"{erros} erro(s){parte_plano}  {fase}")
 
 
+LAYOUTS = {
+    "DEFAULT": ("project", "editor", "preview", "inspector",
+                "console", "timeline", "diagnosticos", "agent"),
+    "FOCUS_AGENT": ("project", "preview", "inspector", "console",
+                    "agent"),
+    "FOCUS_CODE": ("project", "editor", "console", "diagnosticos",
+                   "agent"),
+    "FOCUS_PREVIEW": ("preview", "inspector", "console", "agent"),
+}
+"""Presets F37 (painéis visíveis; sem tamanho fixo frágil)."""
+
+
+def aplicar_layout_nome(ws: StudioWorkspace, nome: str
+                        ) -> list[str]:
+    """Ativa preset (aditivo; resto do Layout intacto)."""
+    chave = str(nome).strip().upper()
+    if chave not in LAYOUTS:
+        raise ErroELiXX(f'Layout "{nome}" inválido '
+                        f'({", ".join(LAYOUTS)}).')
+    visiveis = set(LAYOUTS[chave])
+    for painel in Layout().paineis_visiveis():
+        ws.layout.visivel[painel] = painel in visiveis
+    ws.layout.compacto = False
+    return ws.layout.paineis_visiveis()
+
+
 def salvar_layout(ws: StudioWorkspace, relativo: str = ".elixx/layout.json") -> str:
     """Persiste painéis/aba/geometria (só dados locais, sem segredo)."""
     import json
@@ -782,9 +809,9 @@ def carregar_layout(ws: StudioWorkspace, relativo: str = ".elixx/layout.json") -
         return False
     try:
         dados = json.loads(destino.read_text(encoding="utf-8"))
-    except ValueError:
+        ws.layout = Layout.from_dict(dados)
+    except (ValueError, ErroELiXX):
         return False
-    ws.layout = Layout.from_dict(dados)
     return True
 
 
@@ -867,6 +894,57 @@ def montar_workspace_ui(ws: StudioWorkspace):
                    not ws.layout.compacto),
                    _refresh_estado())).pack(side="right",
                                             padx=2)
+    var_layout = tk.StringVar(value="DEFAULT")
+    tk.OptionMenu(topo, var_layout, "DEFAULT", "FOCUS_AGENT",
+                  "FOCUS_CODE", "FOCUS_PREVIEW",
+                  command=lambda nome: (
+                      aplicar_layout_nome(ws, nome),
+                      _refresh_estado())).pack(side="right",
+                                               padx=2)
+
+    def _palette():
+        from .agent.interacao import CommandPalette
+
+        paleta = CommandPalette()
+        topo_pal = tk.Toplevel(janela)
+        topo_pal.title("Command Palette (Ctrl+K)")
+        topo_pal.geometry("480x300")
+        entrada = ttk.Entry(topo_pal)
+        entrada.pack(fill="x", padx=6, pady=6)
+        lista = tk.Listbox(topo_pal)
+        lista.pack(fill="both", expand=True, padx=6)
+
+        def _recarregar(_e=None):
+            lista.delete(0, "end")
+            for cmd in paleta.buscar(entrada.get())[:30]:
+                lista.insert("end",
+                             f"{cmd['id']} — {cmd['titulo']}")
+
+        def _executar(_e=None):
+            try:
+                item = lista.get(lista.curselection())
+            except Exception:
+                return
+            cid = item.split(" — ", 1)[0]
+            try:
+                out = paleta.executar(app, cid)
+                ws.console.registrar(
+                    "INFO", f"palette: {cid} ok")
+                if cid in ("executar_projeto", "parar_projeto"):
+                    _refresh_estado()
+                _ = out
+            except ErroELiXX as exc:
+                ws.console.registrar("ERROR", str(exc)[:200])
+            topo_pal.destroy()
+
+        entrada.bind("<KeyRelease>", _recarregar)
+        entrada.bind("<Return>", _executar)
+        lista.bind("<Double-Button-1>", _executar)
+        entrada.focus_set()
+        _recarregar()
+
+    ttk.Button(topo, text="Comandos",
+               command=_palette).pack(side="right", padx=2)
 
     # -- meio redimensionável --
     meio = tk.PanedWindow(janela, orient="horizontal",
@@ -911,6 +989,24 @@ def montar_workspace_ui(ws: StudioWorkspace):
     centro = ttk.Frame(meio)
     ttk.Label(centro, text="PREVIEW",
               style="Header.TLabel").pack(anchor="w", pady=2)
+    barra_prev = ttk.Frame(centro)
+    barra_prev.pack(fill="x")
+    modo_prev = {"modo": "Selecionar"}
+    rotulo_modo = ttk.Label(barra_prev, text="Modo: Selecionar")
+    rotulo_modo.pack(side="left")
+    for modo in ("Selecionar", "Mover", "Zoom", "Ajustar"):
+        ttk.Button(barra_prev, text=modo, width=9,
+                   command=lambda m=modo: (
+                       modo_prev.update(modo=m),
+                       rotulo_modo.config(text=f"Modo: {m}"))
+                   ).pack(side="left", padx=1)
+    ttk.Button(barra_prev, text="Executar",
+               style="Accent.TButton",
+               command=lambda: _cmd(
+                   "executar", app.documentos.ativo or "")
+               ).pack(side="right", padx=2)
+    rotulo_prev_status = ttk.Label(centro, text="parado")
+    rotulo_prev_status.pack(anchor="w")
     lista_prev = tk.Listbox(centro)
     lista_prev.pack(fill="both", expand=True)
 
@@ -919,6 +1015,39 @@ def montar_workspace_ui(ws: StudioWorkspace):
               style="Header.TLabel").pack(anchor="w", pady=2)
     texto_insp = tk.Text(direita, height=20, width=30)
     texto_insp.pack(fill="both", expand=True)
+
+    def _ver_codigo():
+        from .codigo.localizacao import localizar_entidade
+
+        sel = ws.preview.selecionado or ""
+        if not sel or ws.modelo is None:
+            ws.console.registrar("ERROR",
+                                 "Selecione uma entidade.")
+            return
+        try:
+            ent = next(e for e in ws.modelo.entidades()
+                       if e.id == sel)
+            texto = ws.app.workspace.resolver(
+                ent.arquivo).read_text(encoding="utf-8")
+            loc = localizar_entidade(ent, texto)
+        except (ErroELiXX, OSError, StopIteration) as exc:
+            ws.console.registrar(
+                "ERROR",
+                "Localização de código não disponível: "
+                f"{str(exc)[:120]}")
+            return
+        try:
+            ed = ws.abrir_no_editor(ent.arquivo)
+            ed.ir_para(loc.inicio_linha)
+            _mostrar_editor(ed)
+            ws.console.registrar(
+                "INFO",
+                f"Código: {ent.arquivo}:{loc.inicio_linha}")
+        except ErroELiXX as exc:
+            ws.console.registrar("ERROR", str(exc)[:200])
+
+    ttk.Button(direita, text="Ver código",
+               command=_ver_codigo).pack(fill="x")
     meio.add(esq, minsize=140)
     meio.add(centro, stretch="always")
     meio.add(direita, minsize=180)
@@ -1162,6 +1291,20 @@ def montar_workspace_ui(ws: StudioWorkspace):
     rotulo_provider = ttk.Label(quadro_agent,
                                 text="Provider: MOCK / DETERMINISTIC")
     rotulo_provider.pack(anchor="w")
+    rotulo_sessao = ttk.Label(quadro_agent, text="Sem sessão")
+    rotulo_sessao.pack(anchor="w")
+
+    def _nova_sessao():
+        from .agent.interacao import AgentSession
+
+        ws._sessao = AgentSession()
+        hist_chat.delete("1.0", "end")
+        rotulo_sessao.config(
+            text=f"Sessão {ws._sessao.id} · IDLE")
+        ws.console.registrar("AGENT", "nova sessão (nada apagado)")
+
+    ttk.Button(quadro_agent, text="Nova sessão",
+               command=_nova_sessao).pack(fill="x")
     rotulo_ctx = ttk.Label(quadro_agent, text="sem contexto")
     rotulo_ctx.pack(anchor="w")
 
@@ -1202,36 +1345,44 @@ def montar_workspace_ui(ws: StudioWorkspace):
     entrada_chat.pack(fill="x")
 
     def _chat_enviar(_evento=None):
-        from .agent.inteligencia import AgentChat
+        from .agent.interacao import AgentSession
 
         pedido = entrada_chat.get().strip()
         if not pedido:
             return
         entrada_chat.delete(0, "end")
-        chat = getattr(ws, "_chat", None)
-        if chat is None:
-            chat = AgentChat()
-            ws._chat = chat
-        resposta = chat.enviar(pedido, ws.modelo)
+        sessao = getattr(ws, "_sessao", None)
+        if not isinstance(sessao, AgentSession):
+            sessao = AgentSession()
+            ws._sessao = sessao
+        ambiente = {"modelo": ws.modelo,
+                    "selecionado": ws.preview.selecionado or "",
+                    "arquivo": app.documentos.ativo or ""}
         hist_chat.insert("end", f"Você: {pedido}\n")
+        try:
+            resposta = sessao.enviar(pedido, ambiente)
+        except ErroELiXX as exc:
+            hist_chat.insert("end",
+                             f"Erro: {str(exc)[:160]}\n")
+            ws.console.registrar("ERROR", str(exc)[:200])
+            return
         if resposta.get("ok"):
-            inter = resposta["intencao"]
             hist_chat.insert(
                 "end",
-                f"Intent: ação={inter['acao']} "
-                f"alvo={inter['alvo']} "
-                f"params={inter['parametros']}\n"
-                f"Plano: resolução="
-                f"{resposta['resolucao'].get('status', '?')} "
-                f"(Propor alteração na aba Agent)\n")
+                f"Agent: intenção {resposta['intencao']} → "
+                f"operação {resposta['operacao']} "
+                f"({resposta['entidades']} entidades). "
+                f"Ver contexto/plano na aba Agent.\n")
         else:
             hist_chat.insert(
                 "end",
-                f"Não suportado "
-                f"({resposta.get('codigo', '?')}): "
-                f"{resposta.get('motivo', '')[:120]}\n")
+                f"Agent: não suportado "
+                f"({resposta.get('erro', '')[:140]})\n")
         hist_chat.see("end")
         ws.console.registrar("AGENT", f"chat: {pedido[:80]}")
+        rotulo_sessao.config(
+            text=f"Sessão {sessao.id} · {sessao.estado}")
+        _refresh_estado()
 
     ttk.Button(quadro_agent, text="→",
                command=_chat_enviar).pack(fill="x")
@@ -1271,7 +1422,8 @@ def montar_workspace_ui(ws: StudioWorkspace):
         tarefa = ContextoTarefa(
             objetivo=objetivo, alvo="",
             entidade_selecionada=sel,
-            arquivo_atual=app.documentos.ativo or "")
+            arquivo_atual=app.documentos.ativo or "",
+            excluir=sorted(getattr(ws, "_ctx_excluidos", set())))
         try:
             ctx = construir_contexto(ws.modelo, tarefa,
                                      ContextoConfig())
@@ -1279,9 +1431,11 @@ def montar_workspace_ui(ws: StudioWorkspace):
             ws.console.registrar("ERROR", str(exc)[:200])
             return
         ws._ctx_tarefa = ctx
+        ws._ctx_req = tarefa
         _, texto = _ctx_estado()
         rotulo_ctx_tarefa.config(text=texto)
         ws.console.registrar("AGENT", f"contexto: {texto}")
+        _recarregar_chips()
 
     def _ctx_ver():
         import tkinter as tk
@@ -1368,6 +1522,45 @@ def montar_workspace_ui(ws: StudioWorkspace):
                command=_ctx_construir).pack(fill="x")
     ttk.Button(quadro_agent, text="Ver contexto",
                command=_ctx_ver).pack(fill="x")
+    quadro_chips = ttk.Frame(quadro_agent)
+    quadro_chips.pack(fill="x")
+
+    def _recarregar_chips():
+        for filho in quadro_chips.winfo_children():
+            filho.destroy()
+        ctx = getattr(ws, "_ctx_tarefa", None)
+        if ctx is None:
+            return
+        for ent in ctx.entidades[:12]:
+            nome = f"✓ {ent.nome or ent.id}"
+            ttk.Button(
+                quadro_chips, text=nome, width=14,
+                command=lambda eid=ent.id: _chip_alternar(
+                    eid)).pack(side="left", padx=1)
+
+    def _chip_alternar(ent_id: str):
+        from .agent.contexto_tarefa import construir_contexto
+
+        req = getattr(ws, "_ctx_req", None)
+        if req is None:
+            return
+        excluidos = set(getattr(ws, "_ctx_excluidos", set()))
+        if ent_id in excluidos:
+            excluidos.discard(ent_id)
+        else:
+            excluidos.add(ent_id)
+        ws._ctx_excluidos = excluidos
+        req.excluir = sorted(excluidos)
+        try:
+            ws._ctx_tarefa = construir_contexto(ws.modelo, req)
+        except ErroELiXX as exc:
+            ws.console.registrar("ERROR", str(exc)[:200])
+            return
+        ws.console.registrar(
+            "AGENT", f"contexto: {'excluído' if ent_id in excluidos else 'incluído'} {ent_id}")
+        _, texto = _ctx_estado()
+        rotulo_ctx_tarefa.config(text=texto)
+        _recarregar_chips()
 
     # -- TOOLS (F36: trace determinístico, sem escrita) --
     ttk.Label(quadro_agent, text="TOOLS",
@@ -1651,6 +1844,8 @@ def montar_workspace_ui(ws: StudioWorkspace):
                              f"comandos: {', '.join(COMANDOS)}")
         _mostrar_aba("console")
 
+    janela.bind("<Control-k>", lambda _e: _palette())
+    janela.bind("<Control-K>", lambda _e: _palette())
     janela.bind("<Control-p>", lambda _e: _tecla_busca())
     janela.bind("<Control-P>", lambda _e: _tecla_busca())
     janela.bind("<Control-Shift-P>", lambda _e: _tecla_comandos())
@@ -1685,6 +1880,20 @@ def montar_workspace_ui(ws: StudioWorkspace):
     janela.bind("<Control-F>", lambda _e: _tecla_busca_ctx())
     janela.bind("f", lambda _e: _tecla_enquadrar())
     janela.bind("F", lambda _e: _tecla_enquadrar())
+
+    def _tecla_layout(numero: int):
+        nomes = ["DEFAULT", "FOCUS_AGENT", "FOCUS_CODE",
+                 "FOCUS_PREVIEW"]
+        try:
+            aplicar_layout_nome(ws, nomes[numero])
+        except ErroELiXX as exc:
+            ws.console.registrar("ERROR", str(exc)[:200])
+        _refresh_estado()
+
+    janela.bind("<Control-1>", lambda _e: _tecla_layout(0))
+    janela.bind("<Control-2>", lambda _e: _tecla_layout(1))
+    janela.bind("<Control-3>", lambda _e: _tecla_layout(2))
+    janela.bind("<Control-4>", lambda _e: _tecla_layout(3))
 
     def _fechar():
         try:

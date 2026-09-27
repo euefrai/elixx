@@ -38,6 +38,11 @@ ATALHOS = {
     "Ctrl+Shift+G": "grafo",
     "Ctrl+Shift+W": "workflow",
     "F": "enquadrar",
+    "Ctrl+K": "palette",
+    "Ctrl+1": "layout_default",
+    "Ctrl+2": "layout_agent",
+    "Ctrl+3": "layout_code",
+    "Ctrl+4": "layout_preview",
 }
 """Mapa atalho → comando (sem quebrar atalhos do sistema: só dentro)."""
 

@@ -33,6 +33,13 @@ from elixx.studio.agent.contexto_tarefa import (
     construir_contexto,
     salvar_preferencias,
 )
+from elixx.studio.agent.interacao import (
+    AgentMessage,
+    AgentSession,
+    CommandPalette,
+    resumo_chips,
+    selecao_global,
+)
 from elixx.studio.agent.inteligencia import (
     AgentChat,
     IntentContext,
@@ -118,6 +125,8 @@ __all__ = [
     "ContextoConfig", "ContextoEntidade", "ContextoResultado",
     "ContextoTarefa", "carregar_preferencias",
     "construir_contexto", "ids_relevantes", "salvar_preferencias",
+    "AgentMessage", "AgentSession", "CommandPalette",
+    "resumo_chips", "selecao_global",
     "AgentChat", "IntentContext", "IntelligenceProvider",
     "MockIntentProvider", "ProviderRegistry",
     "contexto_de_intencao", "explicar", "intent_para_agentintent",
