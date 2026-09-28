@@ -45,6 +45,7 @@ __all__ = [
     "executar_palette_f40",
     "conflitos_f40",
     "desenhar",
+    "_desenhar_placeholder",
     "abrir_janela_cena",
 ]
 
@@ -701,12 +702,13 @@ class SceneCanvas:
     # ----- fundo / debug -----
 
     def fundo_canvas(self) -> dict:
-        from .tema import ELIXX_COLORS
+        from .tema import paleta as _paleta_mod
 
+        _cores = _paleta_mod()
         return {"estilo": self.fundo,
-                "cor": ELIXX_COLORS["background"],
-                "superficie": ELIXX_COLORS["surface"],
-                "grade": ELIXX_COLORS["border"]}
+                "cor": _cores["background"],
+                "superficie": _cores["surface"],
+                "grade": _cores["border"]}
 
     def fundo_para_objeto(self, obj_id: str) -> str:
         oid = _texto_curto(obj_id).strip()
@@ -1093,6 +1095,81 @@ def conflitos_f40() -> list[dict]:
     return saida
 
 
+def _desenhar_placeholder(canvas_tk, obj, x, y, w, h,
+                          cores) -> None:
+    """Placeholder refinado (abstrato; sem imagem falsa).
+
+    PERSONAGEM: figura abstrata (circulo + linhas) + nome.
+    Janela: moldura dupla + titulo. Imagem: icone + status.
+    Demais: rotulo do tipo real + nome.
+    """
+    cx, cy = x + w / 2, y + h / 2
+    if obj.kind == "personagem":
+        canvas_tk.create_rectangle(
+            x, y, x + w, y + h, fill=cores["surface"],
+            outline=cores["border"])
+        r = max(6.0, min(w, h) * 0.12)
+        canvas_tk.create_oval(cx - r, cy - h * 0.30,
+                              cx + r, cy - h * 0.30 + 2 * r,
+                              outline=cores["text_muted"])
+        canvas_tk.create_line(cx, cy - h * 0.30 + 2 * r, cx,
+                              cy + h * 0.15,
+                              fill=cores["text_muted"])
+        canvas_tk.create_line(cx - w * 0.22, cy - h * 0.10,
+                              cx + w * 0.22, cy - h * 0.10,
+                              fill=cores["text_muted"])
+        canvas_tk.create_line(cx, cy + h * 0.15,
+                              cx - w * 0.18, cy + h * 0.32,
+                              fill=cores["text_muted"])
+        canvas_tk.create_line(cx, cy + h * 0.15,
+                              cx + w * 0.18, cy + h * 0.32,
+                              fill=cores["text_muted"])
+        canvas_tk.create_text(cx, y + h - 26, text=obj.rotulo,
+                              fill=cores["text"])
+        canvas_tk.create_text(cx, y + h - 13, text="PERSONAGEM",
+                              fill=cores["text_muted"])
+    elif obj.kind == "janela":
+        canvas_tk.create_rectangle(
+            x, y, x + w, y + h, fill=cores["surface"],
+            outline=cores["border"])
+        canvas_tk.create_rectangle(
+            x + 4, y + 4, x + w - 4, y + h - 4,
+            outline=cores["border"])
+        canvas_tk.create_text(cx, y + 16, text=obj.rotulo,
+                              fill=cores["text_muted"])
+    elif obj.kind == "imagem":
+        canvas_tk.create_rectangle(
+            x, y, x + w, y + h, fill=cores["surface"],
+            outline=cores["border"])
+        canvas_tk.create_text(cx, cy - 12, text="⊞",
+                              fill=cores["text_muted"])
+        canvas_tk.create_text(cx, cy + 6, text=obj.rotulo,
+                              fill=cores["text"])
+    else:
+        rot = {"componente": "COMPONENTE",
+               "grupo": "GRUPO"}.get(obj.kind,
+                                     obj.kind.upper())
+        canvas_tk.create_rectangle(
+            x, y, x + w, y + h, fill=cores["surface"],
+            outline=cores["border"])
+        canvas_tk.create_text(cx, cy - 8, text=rot,
+                              fill=cores["text_muted"])
+        canvas_tk.create_text(cx, cy + 8, text=obj.rotulo,
+                              fill=cores["text"])
+    status = str(obj.asset.get("status", ""))
+    if status in ("ausente", "invalido"):
+        marca = "asset ausente" if status == "ausente" \
+            else "asset inválido"
+        canvas_tk.create_text(cx, y + h - 2, text=marca,
+                              anchor="s",
+                              fill=cores.get("warning",
+                                             cores["text_muted"]))
+    elif obj.kind in ("personagem", "imagem", "componente"):
+        canvas_tk.create_text(cx, y + h - 2, text="sem asset",
+                              anchor="s",
+                              fill=cores["text_muted"])
+
+
 def desenhar(canvas_tk, canvas: SceneCanvas,
              tema: dict | None = None) -> dict:
     """Desenha a cena no Canvas Tk (ou stub duck-typed).
@@ -1100,9 +1177,9 @@ def desenhar(canvas_tk, canvas: SceneCanvas,
     Retorna contagem {objetos, placeholders, selecao, grade}.
     Qualquer falha de item vira placeholder honesto.
     """
-    from .tema import ELIXX_COLORS
+    from .tema import paleta as _paleta_mod
 
-    cores = dict(ELIXX_COLORS)
+    cores = _paleta_mod()
     if isinstance(tema, dict):
         cores.update(tema)
     conta = {"objetos": 0, "placeholders": 0, "selecao": 0,
@@ -1151,27 +1228,8 @@ def desenhar(canvas_tk, canvas: SceneCanvas,
                                            anchor="nw")
                     continue
             if obj.placeholder:
-                rot = {"PERSONAGEM": "PERSONAGEM",
-                       "IMAGEM": "IMAGEM",
-                       "COMPONENTE": "COMPONENTE",
-                       "GRUPO": "GRUPO",
-                       "TEXTO": "TEXTO"}.get(
-                    "PERSONAGEM" if obj.kind == "personagem"
-                    else "IMAGEM" if obj.kind == "imagem"
-                    else "COMPONENTE" if obj.kind ==
-                    "componente" else "GRUPO" if obj.kind ==
-                    "grupo" else "TEXTO")
-                canvas_tk.create_rectangle(
-                    x, y, x + w, y + h,
-                    fill=cores["surface"],
-                    outline=cores["border"])
-                canvas_tk.create_text(
-                    x + w / 2, y + h / 2 - 8, text=rot,
-                    fill=cores["text_muted"])
-                canvas_tk.create_text(
-                    x + w / 2, y + h / 2 + 8,
-                    text=f"{obj.rotulo} · sem asset",
-                    fill=cores["text"])
+                _desenhar_placeholder(canvas_tk, obj, x, y, w,
+                                      h, cores)
                 conta["placeholders"] += 1
             elif obj.kind == "texto":
                 canvas_tk.create_text(
@@ -1189,11 +1247,12 @@ def desenhar(canvas_tk, canvas: SceneCanvas,
             if obj.id in canvas.selecionados:
                 conta["selecao"] += 1
                 canvas_tk.create_rectangle(
-                    x - 2, y - 2, x + w + 2, y + h + 2,
-                    outline=cores["accent"], width=2)
+                    x - 1, y - 1, x + w + 1, y + h + 1,
+                    outline=cores["accent"], width=1)
                 canvas_tk.create_text(
-                    x, y - 10, text=obj.rotulo, anchor="sw",
-                    fill=cores["accent"])
+                    x, y - 10,
+                    text=f"{obj.rotulo} · {obj.kind}",
+                    anchor="sw", fill=cores["accent"])
                 for hnd in canvas.handles_de(obj.id):
                     hx, hy = canvas.viewport.para_tela(
                         hnd["x"], hnd["y"])
@@ -1236,9 +1295,10 @@ def abrir_janela_cena(ws, texto: str,
     janela.title("ELiXX Scene Canvas")
     janela.geometry("900x620")
     try:
-        from .tema import ELIXX_COLORS as _C_JAN, titulo_escuro
+        from .tema import paleta as _paleta_JAN, titulo_escuro
 
-        janela.configure(background=_C_JAN["background"])
+        _cores_jan = _paleta_JAN()
+        janela.configure(background=_cores_jan["background"])
         titulo_escuro(janela)
     except Exception:
         pass
@@ -1247,9 +1307,9 @@ def abrir_janela_cena(ws, texto: str,
     try:
         from .tema import estilizar_tk as _est_jan
 
-        _bg_jan = _C_JAN["surface"]
+        _bg_jan = _paleta_JAN()["surface"]
     except Exception:
-        _bg_jan = "#1e1e26"
+        _bg_jan = "#171720"
     tela = tk.Canvas(janela, highlightthickness=0,
                      background=_bg_jan)
     tela.pack(fill="both", expand=True)

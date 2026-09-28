@@ -1038,7 +1038,7 @@ def test_inspector_vazio_fonte():
 
     fonte = pathlib.Path(modulo.__file__).read_text(
         encoding="utf-8")
-    assert "(nenhum objeto selecionado)" in fonte
+    assert "No selection" in fonte
 
 
 def test_ver_codigo_fonte():

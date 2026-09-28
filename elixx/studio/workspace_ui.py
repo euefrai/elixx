@@ -891,6 +891,8 @@ def montar_workspace_ui(ws: StudioWorkspace):
                 if alvo in ws.editores:
                     _mostrar_editor(ws.editores[alvo])
                 _recarregar_arvore()
+                ws.console.registrar("SUCCESS",
+                                     f"✓ Salvo: {alvo}")
             if nome in ("executar", "parar"):
                 try:
                     _redesenhar_cena()
@@ -981,10 +983,10 @@ def montar_workspace_ui(ws: StudioWorkspace):
         topo_pal.title("Command Palette (Ctrl+K)")
         topo_pal.geometry("480x300")
         try:
-            from .tema import ELIXX_COLORS as _C_PAL
+            from .tema import paleta as _paleta_PAL
 
             topo_pal.configure(
-                background=_C_PAL["background"])
+                background=_paleta_PAL()["background"])
         except Exception:
             pass
         entrada = ttk.Entry(topo_pal)
@@ -998,11 +1000,36 @@ def montar_workspace_ui(ws: StudioWorkspace):
         except Exception:
             pass
 
+        def _categoria_cmd(cid: str) -> str:
+            cid = str(cid)
+            if cid.startswith(("scene_", "layout_", "foco_",
+                               "sair_do_foco")):
+                return "Scene"
+            if cid.startswith(("abrir_", "mostrar_codigo",
+                               "mostrar_relacoes", "salvar",
+                               "executar", "parar")):
+                return "Editor"
+            if cid.startswith(("focar_", "nova_sessao",
+                               "consultar", "mostrar_tools",
+                               "mostrar_plano", "mostrar_changes",
+                               "mostrar_raciocinio",
+                               "adicionar_contexto",
+                               "remover_contexto",
+                               "inspecionar_selecao",
+                               "consultar_entidade")):
+                return "Agent"
+            return "Projeto"
+
         def _recarregar(_e=None):
             lista.delete(0, "end")
-            for cmd in paleta.buscar(entrada.get())[:30]:
-                lista.insert("end",
-                             f"{cmd['id']} — {cmd['titulo']}")
+            cmds = sorted(paleta.buscar(entrada.get())[:30],
+                          key=lambda c: (_categoria_cmd(
+                              c["id"]), c["id"]))
+            for cmd in cmds:
+                lista.insert(
+                    "end",
+                    f"[{_categoria_cmd(cmd['id'])}] "
+                    f"{cmd['id']} — {cmd['titulo']}")
 
         def _executar(_e=None):
             try:
@@ -1010,6 +1037,8 @@ def montar_workspace_ui(ws: StudioWorkspace):
             except Exception:
                 return
             cid = item.split(" — ", 1)[0]
+            if cid.startswith("["):
+                cid = cid.split("] ", 1)[-1]
             try:
                 out = paleta.executar(app, cid)
                 ws.console.registrar(
@@ -1029,6 +1058,118 @@ def montar_workspace_ui(ws: StudioWorkspace):
 
     ttk.Button(topo, text="Comandos",
                command=_palette).pack(side="right", padx=2)
+
+    # -- menubar real (somente comandos existentes) --
+    def _menu_escuro(menu):
+        try:
+            from .tema import paleta as _paleta_menu
+
+            _cm = _paleta_menu()
+            menu.config(background=_cm["surface"],
+                        foreground=_cm["text"],
+                        activebackground=_cm["selection"],
+                        activeforeground=_cm["text"],
+                        borderwidth=0)
+        except Exception:
+            pass
+        return menu
+
+    try:
+        from .ux import FocusState as _FocusState
+
+        barra_menu = _menu_escuro(tk.Menu(janela))
+        janela.config(menu=barra_menu)
+        _menu_arq = _menu_escuro(tk.Menu(barra_menu,
+                                         tearoff=0))
+        _menu_arq.add_command(
+            label="Salvar (Ctrl+S)",
+            command=lambda: _cmd(
+                "salvar", app.documentos.ativo or ""))
+        _menu_arq.add_command(
+            label="Executar (F5)",
+            command=lambda: _cmd(
+                "executar", app.documentos.ativo or ""))
+        _menu_arq.add_command(label="Parar",
+                              command=lambda: _cmd("parar"))
+        _menu_arq.add_separator()
+        _menu_arq.add_command(label="Fechar",
+                              command=lambda: _fechar())
+        barra_menu.add_cascade(label="Arquivo",
+                               menu=_menu_arq)
+        _menu_ver = _menu_escuro(tk.Menu(barra_menu,
+                                         tearoff=0))
+        for _nome_lay in ("DEFAULT", "CODE", "SCENE", "AGENT",
+                          "REVIEW"):
+            _menu_ver.add_command(
+                label=f"Layout {_nome_lay}",
+                command=lambda n=_nome_lay: (
+                    aplicar_layout_nome(ws, n),
+                    _refresh_estado()))
+        _menu_ver.add_separator()
+        _menu_ver.add_command(
+            label="Compacto",
+            command=lambda: (ws.layout.definir_compacto(
+                not ws.layout.compacto), _refresh_estado()))
+        _menu_ver.add_command(
+            label="Foco Canvas (Ctrl+Shift+F)",
+            command=lambda: _foco_canvas())
+        _menu_ver.add_command(label="Sair do foco (Esc)",
+                              command=lambda: _sair_foco())
+        barra_menu.add_cascade(label="Visualizar",
+                               menu=_menu_ver)
+        _menu_cena = _menu_escuro(tk.Menu(barra_menu,
+                                          tearoff=0))
+        _menu_cena.add_command(label="Fit (Home)",
+                               command=lambda: _ajustar_cena())
+        _menu_cena.add_command(
+            label="Grid (G)",
+            command=lambda: _alternar_grade_cena())
+        _menu_cena.add_command(label="Zoom +",
+                               command=lambda: _zoom_passo(1))
+        _menu_cena.add_command(label="Zoom -",
+                               command=lambda: _zoom_passo(-1))
+        barra_menu.add_cascade(label="Cena", menu=_menu_cena)
+        _menu_ajuda = _menu_escuro(tk.Menu(barra_menu,
+                                           tearoff=0))
+        _menu_ajuda.add_command(
+            label="Command Palette (Ctrl+K)",
+            command=_palette)
+        _menu_ajuda.add_command(
+            label="Atalhos",
+            command=lambda: ws.console.registrar(
+                "INFO", f"atalhos: {len(_atalhos_info())}"))
+        barra_menu.add_cascade(label="Ajuda", menu=_menu_ajuda)
+    except Exception:
+        pass
+
+    def _atalhos_info():
+        from .app import ATALHOS
+
+        return dict(ATALHOS)
+
+    def _foco_canvas():
+        from .ux import FocusState as _FocusState
+
+        try:
+            foco = getattr(ws, "_foco_ui", None)
+            if foco is None:
+                foco = _FocusState()
+                ws._foco_ui = foco
+            foco.entrar(ws.layout, ["preview"])
+        except ErroELiXX as exc:
+            ws.console.registrar("ERROR", str(exc)[:200])
+        _refresh_estado()
+
+    def _sair_foco():
+        try:
+            foco = getattr(ws, "_foco_ui", None)
+            if foco is None or foco.ativo is None:
+                ws.console.registrar("INFO", "fora de foco")
+                return
+            foco.sair(ws.layout)
+        except ErroELiXX as exc:
+            ws.console.registrar("ERROR", str(exc)[:200])
+        _refresh_estado()
 
     # -- meio redimensionável --
     meio = tk.PanedWindow(janela, orient="horizontal",
@@ -1068,11 +1209,14 @@ def montar_workspace_ui(ws: StudioWorkspace):
         plano = getattr(ws, "plano_view", None)
         prog = plano.progresso() if plano is not None else None
         trace = getattr(ws, "_trace_tools", None)
+        sel = ws.preview.selecionado or "—"
+        zoom = zoom_prev["nivel"]
+        zoom_txt = f"{zoom}%" if zoom != "Ajustar" else "Fit"
         barra_status.config(text=resumo_status(
             est["projeto"], app.documentos.ativo,
             est["analisando"], diag["erros"], prog,
             len(trace.chamadas) if trace else 0,
-            est["executando"]))
+            est["executando"]) + f" · Sel {sel} · {zoom_txt}")
 
     def _recarregar_arvore():
         from .ux import formatar_arvore
@@ -1102,28 +1246,51 @@ def montar_workspace_ui(ws: StudioWorkspace):
     barra_prev = ttk.Frame(centro)
     barra_prev.pack(fill="x")
     modo_prev = {"modo": "Selecionar"}
-    rotulo_modo = ttk.Label(barra_prev, text="Selecionar",
-                            style="Caption.TLabel")
-    rotulo_modo.pack(side="left", padx=(0, 2))
+    botoes_modo = {}
+
+    def _definir_modo(modo):
+        modo_prev.update(modo=modo)
+        for nome, botao in botoes_modo.items():
+            try:
+                botao.config(
+                    style="Active.Toolbar.TButton"
+                    if nome == modo else "Toolbar.TButton")
+            except Exception:
+                pass
+
     for modo in ("Selecionar", "Mover", "Escalar", "Girar",
                  "Ajustar"):
-        ttk.Button(barra_prev, text=modo, width=10,
-                   style="Toolbar.TButton",
-                   command=lambda m=modo: (
-                       modo_prev.update(modo=m),
-                       rotulo_modo.config(text=m))
-                   ).pack(side="left", padx=1)
+        botao = ttk.Button(barra_prev, text=modo, width=10,
+                           style="Toolbar.TButton",
+                           command=lambda m=modo: _definir_modo(
+                               m))
+        botao.pack(side="left", padx=1)
+        botoes_modo[modo] = botao
+        botao.bind("<Enter>", _dica(
+            {"Selecionar": "Selecionar objeto (V)",
+             "Mover": "Mover objeto selecionado (G)",
+             "Escalar": "Escalar (S) — preparado",
+             "Girar": "Girar (R) — preparado",
+             "Ajustar": "Ajustar (F) — preparado"}[modo]))
+        botao.bind("<Leave>", lambda _e: _refresh_barra())
+    _definir_modo("Selecionar")
     ttk.Separator(barra_prev, orient="vertical").pack(
         side="left", fill="y", padx=4)
     grade_prev = {"ativa": False}
-    ttk.Button(barra_prev, text="Grid", width=5,
-               style="Toolbar.TButton",
-               command=lambda: _alternar_grade_cena()
-               ).pack(side="left", padx=1)
-    ttk.Button(barra_prev, text="Fit", width=4,
-               style="Toolbar.TButton",
-               command=lambda: _ajustar_cena()
-               ).pack(side="left", padx=1)
+    _botao_grid = ttk.Button(barra_prev, text="Grid", width=5,
+                             style="Toolbar.TButton",
+                             command=lambda: _alternar_grade_cena()
+                             )
+    _botao_grid.pack(side="left", padx=1)
+    _botao_grid.bind("<Enter>", _dica("Grid — grade da cena"))
+    _botao_grid.bind("<Leave>", lambda _e: _refresh_barra())
+    _botao_fit = ttk.Button(barra_prev, text="Fit", width=4,
+                            style="Toolbar.TButton",
+                            command=lambda: _ajustar_cena()
+                            )
+    _botao_fit.pack(side="left", padx=1)
+    _botao_fit.bind("<Enter>", _dica("Fit — enquadrar cena"))
+    _botao_fit.bind("<Leave>", lambda _e: _refresh_barra())
     ttk.Separator(barra_prev, orient="vertical").pack(
         side="left", fill="y", padx=4)
     zoom_prev = {"nivel": 100}
@@ -1200,24 +1367,35 @@ def montar_workspace_ui(ws: StudioWorkspace):
 
     def _redesenhar_cena():
         from .scene_canvas import SceneCanvas, cena_de_texto
-        from .tema import ELIXX_COLORS, estilizar_tk
+        from .tema import estilizar_tk
+        from .tema import paleta as _paleta_cena
+
+        _cores_cena = _paleta_cena()
 
         try:
             estilizar_tk(tela_cena)
         except Exception:
             pass
         texto = _texto_entrada_atual()
-        if not texto.strip():
-            _canvas_cena["obj"] = None
-        else:
+        _canvas_cena["obj"] = None
+        _canvas_cena["vazio"] = (
+            "Nenhum projeto aberto",
+            "abra um arquivo para ver a cena")
+        if texto.strip():
             saida = cena_de_texto(texto)
             if not saida["ok"]:
-                _canvas_cena["obj"] = None
+                _canvas_cena["vazio"] = (
+                    "Cena com erro",
+                    "verifique o diagnóstico")
             else:
                 cena = SceneCanvas(inspetor=app.inspetor,
                                    eventos=app.eventos)
                 cena.montar(saida["cena"],
                             saida["personagens"], ws.modelo)
+                if not cena.objetos:
+                    _canvas_cena["vazio"] = (
+                        "No objects in scene",
+                        "crie ou abra uma cena para começar")
                 cena.viewport.grid = grade_prev["ativa"]
                 try:
                     cena.viewport.set_zoom(zoom_prev["nivel"])
@@ -1247,11 +1425,18 @@ def montar_workspace_ui(ws: StudioWorkspace):
                 alt = max(tela_cena.winfo_height(), 100)
                 tela_cena.create_rectangle(
                     0, 0, larg, alt,
-                    fill=ELIXX_COLORS["surface"], outline="")
+                    fill=_cores_cena["surface"], outline="")
+                titulo, detalhe = _canvas_cena.get(
+                    "vazio", ("Cena", ""))
                 tela_cena.create_text(
-                    larg // 2, alt // 2,
-                    text="Execute (F5) para ver a cena",
-                    fill=ELIXX_COLORS["text_muted"])
+                    larg // 2, alt // 2 - 10,
+                    text=titulo,
+                    fill=_cores_cena["text"],
+                    font=("Segoe UI", 11, "bold"))
+                tela_cena.create_text(
+                    larg // 2, alt // 2 + 12,
+                    text=detalhe,
+                    fill=_cores_cena["text_muted"])
             else:
                 from .scene_canvas import desenhar
 
@@ -1365,25 +1550,33 @@ def montar_workspace_ui(ws: StudioWorkspace):
     ed_texto = tk.Text(quadro_ed, height=10, wrap="none")
     ed_texto.pack(side="left", fill="both", expand=True)
     try:
-        from .tema import ELIXX_COLORS
+        from .tema import paleta as _paleta_mod
 
-        ed_texto.tag_config("palavra", foreground="#8ab8ff")
-        ed_texto.tag_config("string", foreground="#7ce0a3")
-        ed_texto.tag_config("numero", foreground="#d8a0ff")
-        ed_texto.tag_config("nome", foreground="#e8e8f0",
+        _cores_ed = _paleta_mod()
+        ed_texto.tag_config("palavra",
+                            foreground=_cores_ed["accent"])
+        ed_texto.tag_config("string",
+                            foreground=_cores_ed["success"])
+        ed_texto.tag_config("numero",
+                            foreground=_cores_ed["warning"])
+        ed_texto.tag_config("nome",
+                            foreground=_cores_ed["text"],
                             font=("Consolas", 9, "bold"))
-        ed_texto.config(background=ELIXX_COLORS["surface"],
-                        foreground=ELIXX_COLORS["text"],
-                        insertbackground=ELIXX_COLORS["text"],
+        ed_texto.tag_config("erro",
+                            foreground=_cores_ed["danger"],
+                            underline=True)
+        ed_texto.config(background=_cores_ed["surface"],
+                        foreground=_cores_ed["text"],
+                        insertbackground=_cores_ed["text"],
                         highlightthickness=0, borderwidth=0)
-        ed_linhas.config(background=ELIXX_COLORS["background"],
-                         foreground=ELIXX_COLORS["text_muted"],
+        ed_linhas.config(background=_cores_ed["background"],
+                         foreground=_cores_ed["text_muted"],
                          highlightthickness=0, borderwidth=0)
     except Exception:
-        ed_texto.tag_config("palavra", foreground="blue")
-        ed_texto.tag_config("string", foreground="green")
-        ed_texto.tag_config("numero", foreground="purple")
-        ed_texto.tag_config("nome", foreground="black")
+        ed_texto.tag_config("palavra", foreground="#8b5cf6")
+        ed_texto.tag_config("string", foreground="#58c98a")
+        ed_texto.tag_config("numero", foreground="#e0b45c")
+        ed_texto.tag_config("nome", foreground="#f3f3f7")
 
     # abas de arquivo (uma por documento aberto)
     quadro_abas_ed = ttk.Frame(quadro_ed)
@@ -1450,6 +1643,13 @@ def montar_workspace_ui(ws: StudioWorkspace):
 
     def _mostrar_aba(aba: str):
         ws.layout.definir_aba(aba)
+        for _nome_aba, _botao_aba in botoes_abas_btn.items():
+            try:
+                _botao_aba.config(
+                    style="TabActive.TButton"
+                    if _nome_aba == aba else "TButton")
+            except Exception:
+                pass
         corpo_aba.pack_forget()
         timeline_lista.pack_forget()
         lista_plano.pack_forget()
@@ -1490,11 +1690,19 @@ def montar_workspace_ui(ws: StudioWorkspace):
                                  f"{e.get('mensagem', '')}\n")
             corpo_aba.pack(fill="x")
 
+    botoes_abas_btn = {}
     for aba in ("console", "timeline", "diagnosticos",
                   "plano", "raciocinio"):
-        ttk.Button(botoes_abas, text=aba.capitalize(),
-                   command=lambda a=aba: _mostrar_aba(a)).pack(
-                       side="left")
+        _botao_aba = ttk.Button(
+            botoes_abas, text=aba.capitalize(),
+            command=lambda a=aba: _mostrar_aba(a))
+        _botao_aba.pack(side="left")
+        botoes_abas_btn[aba] = _botao_aba
+    try:
+        botoes_abas_btn[ws.layout.aba_inferior].config(
+            style="TabActive.TButton")
+    except Exception:
+        pass
 
     def _mostrar_plano():
         from .agent.planejamento import PainelPlano
@@ -1638,7 +1846,7 @@ def montar_workspace_ui(ws: StudioWorkspace):
                 lambda _e, i=idx: _alternar_secao(i))
             if sec.aberta:
                 for k, v in sec.campos.items():
-                    texto_insp.insert("end", f"  {k}: {v}\n")
+                    texto_insp.insert("end", f"  {k + chr(58):<14}{v}\n")
 
     def _alternar_secao(indice: int) -> None:
         from .ux import SecaoInspector
@@ -1663,7 +1871,7 @@ def montar_workspace_ui(ws: StudioWorkspace):
                 if sec.aberta:
                     for k, v in sec.campos.items():
                         texto_insp.insert("end",
-                                          f"  {k}: {v}\n")
+                                          f"  {k + chr(58):<14}{v}\n")
 
     lista_prev.bind("<<ListboxSelect>>", _ao_selecionar_prev)
 
@@ -1673,9 +1881,11 @@ def montar_workspace_ui(ws: StudioWorkspace):
     ttk.Label(quadro_agent, text="ELiXX AGENT",
               style="Header.TLabel").pack(anchor="w", pady=2)
     rotulo_provider = ttk.Label(quadro_agent,
-                                text="Provider: MOCK / DETERMINISTIC")
+                                text="MOCK / DETERMINISTIC",
+                                style="Caption.TLabel")
     rotulo_provider.pack(anchor="w")
-    rotulo_sessao = ttk.Label(quadro_agent, text="Sem sessão")
+    rotulo_sessao = ttk.Label(quadro_agent, text="● Ready",
+                              style="Caption.TLabel")
     rotulo_sessao.pack(anchor="w")
 
     def _nova_sessao():
@@ -1683,13 +1893,15 @@ def montar_workspace_ui(ws: StudioWorkspace):
 
         ws._sessao = AgentSession()
         hist_chat.delete("1.0", "end")
+        hist_chat.insert("1.0", "Nenhuma mensagem ainda.\n")
         rotulo_sessao.config(
-            text=f"Sessão {ws._sessao.id} · IDLE")
+            text=f"● {ws._sessao.id} · IDLE")
         ws.console.registrar("AGENT", "nova sessão (nada apagado)")
 
     ttk.Button(quadro_agent, text="Nova sessão",
                command=_nova_sessao).pack(fill="x")
-    rotulo_ctx = ttk.Label(quadro_agent, text="sem contexto")
+    rotulo_ctx = ttk.Label(quadro_agent, text="▣ —",
+                           style="Caption.TLabel")
     rotulo_ctx.pack(anchor="w")
 
     def _agent_consultar():
@@ -1697,8 +1909,11 @@ def montar_workspace_ui(ws: StudioWorkspace):
             sel = ws.preview.selecionado or ""
             ctx = ws.agent.contexto(ws.modelo, sel) if sel else \
                 {"entidades": 0, "relacoes": 0, "arquivos": []}
+            arqs = " · ".join(ctx["arquivos"][:2])
             rotulo_ctx.config(
-                text=f"ctx: {ctx['entidades']} ent")
+                text=f"▣ {sel or '—'} · "
+                     f"{ctx['entidades']} ent"
+                     + (f" · {arqs}" if arqs else ""))
             ws.console.registrar("AGENT",
                                  f"contexto: {ctx['entidades']}")
         except ErroELiXX as exc:
@@ -1736,6 +1951,8 @@ def montar_workspace_ui(ws: StudioWorkspace):
     entrada_chat.pack(fill="x")
 
     def _chat_enviar(_evento=None):
+        from types import SimpleNamespace
+
         from .agent.interacao import AgentSession
 
         pedido = entrada_chat.get().strip()
@@ -1746,9 +1963,10 @@ def montar_workspace_ui(ws: StudioWorkspace):
         if not isinstance(sessao, AgentSession):
             sessao = AgentSession()
             ws._sessao = sessao
-        ambiente = {"modelo": ws.modelo,
-                    "selecionado": ws.preview.selecionado or "",
-                    "arquivo": app.documentos.ativo or ""}
+        ambiente = SimpleNamespace(
+            modelo=ws.modelo,
+            selecionado=ws.preview.selecionado or "",
+            arquivo=app.documentos.ativo or "")
         hist_chat.insert("end", f"Você: {pedido}\n")
         try:
             resposta = sessao.enviar(pedido, ambiente)
@@ -1839,10 +2057,10 @@ def montar_workspace_ui(ws: StudioWorkspace):
         topo.title("Contexto da tarefa")
         topo.geometry("520x420")
         try:
-            from .tema import ELIXX_COLORS as _C_CTX
+            from .tema import paleta as _paleta_CTX
 
             topo.configure(
-                background=_C_CTX["background"])
+                background=_paleta_CTX()["background"])
         except Exception:
             pass
         var_filtro = tk.StringVar(value="Todas")
@@ -2080,7 +2298,7 @@ def montar_workspace_ui(ws: StudioWorkspace):
         _desenhar_grafo()
 
     def _desenhar_grafo():
-        from .tema import ELIXX_COLORS as _CORES_GRAFO
+        from .tema import paleta as _paleta_GRAFO
 
         esp = _espaco()
         tela_grafo.delete("all")
@@ -2103,15 +2321,15 @@ def montar_workspace_ui(ws: StudioWorkspace):
         for no in esp.visiveis():
             x = (no["x"] - ox) * zoom + 10
             y = (no["y"] - oy) * zoom + 10
-            cor = _CORES_GRAFO["accent"] \
+            cor = _paleta_GRAFO()["accent"] \
                 if no["id"] == esp.selecao \
-                else _CORES_GRAFO["surface"]
+                else _paleta_GRAFO()["surface"]
             tela_grafo.create_rectangle(x - 8, y - 8, x + 8, y + 8,
                                         fill=cor,
                                         tags=(f"no:{no['id']}",))
             tela_grafo.create_text(x, y + 18,
                                    text=no["rotulo"][:14],
-                                   fill=_CORES_GRAFO["text"],
+                                   fill=_paleta_GRAFO()["text"],
                                    tags=(f"no:{no['id']}",))
 
     def _grafo_clique(evento):
@@ -2223,7 +2441,7 @@ def montar_workspace_ui(ws: StudioWorkspace):
         _recarregar_preview()
     else:
         lista_prev.insert("end", "(nada para mostrar)")
-    texto_insp.insert("1.0", "(nenhum objeto selecionado)")
+    texto_insp.insert("1.0", "No selection\n\nSelect an object" " in the scene or Project.")
     if not ws.console.entradas:
         ws.console.registrar("INFO", "ELiXX Studio pronto.")
     _mostrar_aba("console")

@@ -62,6 +62,9 @@ class _StubCanvas:
     def create_image(self, *a, **k):
         return self._reg("image", *a, **k)
 
+    def create_oval(self, *a, **k):
+        return self._reg("oval", *a, **k)
+
 
 def _workspace(tmp_path):
     from elixx.studio import StudioApp, StudioWorkspace
@@ -215,12 +218,12 @@ def test_canvas_vazio_sem_objetos():
 
 
 def test_fundo_dark_design_system():
-    from elixx.studio import ELIXX_COLORS
+    from elixx.studio import ELIXX_DS3
 
     canvas, _ = _canvas()
     fundo = canvas.fundo_canvas()
     assert fundo["estilo"] == "dark"
-    assert fundo["cor"] == ELIXX_COLORS["background"]
+    assert fundo["cor"] == ELIXX_DS3["bg_base"]
     assert fundo["cor"] != "#ffffff"
 
 
@@ -788,7 +791,7 @@ def test_pan_nao_quebra_hit():
 
 
 def test_desenhar_selecao_outline():
-    from elixx.studio import ELIXX_COLORS
+    from elixx.studio import ELIXX_DS3
     from elixx.studio.scene_canvas import desenhar
 
     canvas, _ = _canvas()
@@ -797,7 +800,7 @@ def test_desenhar_selecao_outline():
     conta = desenhar(stub, canvas)
     assert conta["selecao"] == 1
     acentos = [k for k, a, kw in stub.itens
-               if kw.get("outline") == ELIXX_COLORS["accent"]]
+               if kw.get("outline") == ELIXX_DS3["accent"]]
     assert acentos
 
 
@@ -812,7 +815,7 @@ def test_desenhar_handles():
 
 
 def test_desenhar_fundo_dark():
-    from elixx.studio import ELIXX_COLORS
+    from elixx.studio import ELIXX_DS3
     from elixx.studio.scene_canvas import desenhar
 
     canvas, _ = _canvas()
@@ -820,7 +823,7 @@ def test_desenhar_fundo_dark():
     desenhar(stub, canvas)
     fundo = stub.itens[0]
     assert fundo[0] == "rect"
-    assert fundo[2].get("fill") == ELIXX_COLORS["background"]
+    assert fundo[2].get("fill") == ELIXX_DS3["bg_base"]
 
 
 def test_desenhar_sem_branco_puro():

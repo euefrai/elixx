@@ -56,50 +56,51 @@ class Botao(_Base):
 
 
 def test_listbox_dark():
-    from elixx.studio import ELIXX_COLORS
+    from elixx.studio import ELIXX_DS3
 
     w = Listbox()
     assert estilizar_tk(w) is w
-    assert w.cfg["background"] == ELIXX_COLORS["surface"]
-    assert w.cfg["foreground"] == ELIXX_COLORS["text"]
-    assert w.cfg["selectbackground"] == \
-        ELIXX_COLORS["selection"]
+    assert w.cfg["background"] == ELIXX_DS3["surface"]
+    assert w.cfg["foreground"] == ELIXX_DS3["text_primary"]
+    assert w.cfg["selectbackground"] == ELIXX_DS3["accent"]
     assert w.cfg["highlightthickness"] == 0
 
 
 def test_text_code_font():
-    from elixx.studio import ELIXX_COLORS, ELIXX_FONTS
+    from elixx.studio import ELIXX_DS3, ELIXX_TYPE
 
     w = Text()
     estilizar_tk(w)
-    assert w.cfg["background"] == ELIXX_COLORS["surface"]
-    assert w.cfg["insertbackground"] == ELIXX_COLORS["text"]
-    assert w.cfg["font"][0] == ELIXX_FONTS["code"][0]
+    assert w.cfg["background"] == ELIXX_DS3["surface"]
+    assert w.cfg["insertbackground"] == \
+        ELIXX_DS3["text_primary"]
+    assert w.cfg["font"][0] == ELIXX_TYPE["monospace"][0]
 
 
 def test_canvas_surface():
-    from elixx.studio import ELIXX_COLORS
+    from elixx.studio import ELIXX_DS3
 
     w = Canvas()
     estilizar_tk(w)
-    assert w.cfg["background"] == ELIXX_COLORS["surface"]
+    assert w.cfg["background"] == ELIXX_DS3["bg_base"]
 
 
 def test_optionmenu_com_menu():
-    from elixx.studio import ELIXX_COLORS
+    from elixx.studio import ELIXX_DS3
 
     w = OptionMenu()
     estilizar_tk(w)
-    assert w.cfg["background"] == ELIXX_COLORS["surface_alt"]
-    assert w._menu.cfg["background"] == ELIXX_COLORS["surface"]
+    assert w.cfg["background"] == \
+        ELIXX_DS3["surface_elevated"]
+    assert w._menu.cfg["background"] == ELIXX_DS3["surface"]
 
 
 def test_entry_dark():
-    from elixx.studio import ELIXX_COLORS
+    from elixx.studio import ELIXX_DS3
 
     w = Entry()
     estilizar_tk(w)
-    assert w.cfg["background"] == ELIXX_COLORS["surface"]
+    assert w.cfg["background"] == ELIXX_DS3["surface"]
 
 
 def test_widget_desconhecido():
