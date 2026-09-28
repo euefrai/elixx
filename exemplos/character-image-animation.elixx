@@ -1,0 +1,25 @@
+janela palco {
+ titulo: "Juh"
+ personagem Juh {
+  imagem: "assets/personagem_teste/personagem.png"
+  posicao: 100 100
+ }
+ animacao respirar {
+  alvo: Juh
+  escala: 1 -> 1.05
+  duracao: 1200ms
+  movimento: suave
+ }
+ animacao inclinar {
+  alvo: Juh
+  rotacao: 0 -> 6
+  duracao: 900ms
+  movimento: suave
+ }
+ animacao deslocar {
+  alvo: Juh
+  posicao: 100 100 -> 140 100
+  duracao: 800ms
+  movimento: suave
+ }
+}

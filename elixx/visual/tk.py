@@ -48,6 +48,9 @@ class RenderizadorTk(Renderizador):
         self._ordem: list[int] = []
         self._ordem_set: set[int] = set()
         self._camadas_aplicadas: tuple = ()
+        # F41: último transform aplicado por nó (refresh de foto só
+        # quando escala/rotação mudam; posição usa place, sem reload).
+        self._transf_aplicada: dict[int, tuple] = {}
 
     # ----- construção -----
 
@@ -724,6 +727,7 @@ class RenderizadorTk(Renderizador):
         refs = self._paineis.get(id(no))
         if refs is None:
             return
+        refs["dados"] = dados  # F41: cache p/ refresh de transform
         try:
             if dados is None:
                 raise ErroELiXX("Download vazio ou falhou.")
@@ -1322,6 +1326,34 @@ class RenderizadorTk(Renderizador):
                 return
             self._geom[id(no)] = chave
             widget.place(**args)
+            # F41: escala/rotação mudaram? Regenera a foto com o
+            # MESMO carregamento (bytes em cache; sem reparse).
+            try:
+                transf = (round(float(
+                    getattr(no, "rotacao", 0.0) or 0.0), 3),
+                    round(float(sx), 4), round(float(sy), 4))
+            except (TypeError, ValueError):
+                return
+            if self._transf_aplicada.get(id(no)) == transf:
+                return
+            primeira = id(no) not in self._transf_aplicada
+            self._transf_aplicada[id(no)] = transf
+            if primeira:
+                return
+            refs = self._paineis.get(id(no))
+            if refs is None or refs.get("kind") not in (
+                    "imagem", "parte"):
+                return
+            if not refs.get("carregada"):
+                return
+            try:
+                dados = refs.get("dados")
+                if dados is None:
+                    self._carregar_imagem_local(no)
+                else:
+                    self._aplicar_bytes_imagem(no, dados)
+            except Exception:
+                pass
         except self._tk.TclError:
             pass
 
