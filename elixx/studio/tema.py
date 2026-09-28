@@ -288,8 +288,7 @@ def titulo_escuro(janela) -> dict:
     if not sys.platform.startswith("win"):
         return {"ok": False, "motivo": "sem DWM fora do Windows"}
     try:
-        hwnd = ctypes.windll.user32.GetParent(
-            janela.winfo_id())
+        hwnd = janela.winfo_id()
         valor = ctypes.c_int(1)
         ctypes.windll.dwmapi.DwmSetWindowAttribute(
             hwnd, 20, ctypes.byref(valor),

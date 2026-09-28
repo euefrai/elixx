@@ -1107,7 +1107,7 @@ def montar_workspace_ui(ws: StudioWorkspace):
     rotulo_modo.pack(side="left", padx=(0, 2))
     for modo in ("Selecionar", "Mover", "Escalar", "Girar",
                  "Ajustar"):
-        ttk.Button(barra_prev, text=modo, width=7,
+        ttk.Button(barra_prev, text=modo, width=10,
                    style="Toolbar.TButton",
                    command=lambda m=modo: (
                        modo_prev.update(modo=m),
@@ -1223,6 +1223,22 @@ def montar_workspace_ui(ws: StudioWorkspace):
                     cena.viewport.set_zoom(zoom_prev["nivel"])
                 except Exception:
                     pass
+                try:
+                    _tl, _ta = tela_cena.winfo_width(), \
+                        tela_cena.winfo_height()
+                    _tocado = (
+                        zoom_prev["nivel"] != 100
+                        or cena.viewport.offset_x != 0.0
+                        or cena.viewport.offset_y != 0.0)
+                    if _tl > 100 and _ta > 100 and not _tocado:
+                        cena.enquadrar(_tl, _ta)
+                        zoom_prev["nivel"] = cena.viewport.zoom
+                        rotulo_zoom.config(
+                            text=(f"{cena.viewport.zoom}%"
+                                  if cena.viewport.zoom !=
+                                  "Ajustar" else "Ajustar"))
+                except Exception:
+                    pass
                 _canvas_cena["obj"] = cena
         try:
             tela_cena.delete("all")
@@ -1296,7 +1312,7 @@ def montar_workspace_ui(ws: StudioWorkspace):
     tela_cena.bind("<Configure>", lambda _e: _redesenhar_cena())
     _redesenhar_cena()
 
-    direita = ttk.Frame(meio, width=240)
+    direita = ttk.Frame(meio, width=260)
     ttk.Label(direita, text="INSPECTOR",
               style="Header.TLabel").pack(anchor="w", pady=2)
     texto_insp = tk.Text(direita, height=20, width=30)
