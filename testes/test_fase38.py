@@ -262,12 +262,16 @@ def test_preview_viewport_fonte():
 
 
 def test_preview_tema_fonte():
+    import elixx.studio.tema as tema_mod
     import elixx.studio.workspace_ui as modulo
     import pathlib
 
     fonte = pathlib.Path(modulo.__file__).read_text(
         encoding="utf-8")
-    assert "selectbackground" in fonte
+    fonte_tema = pathlib.Path(tema_mod.__file__).read_text(
+        encoding="utf-8")
+    assert "estilizar_tk" in fonte
+    assert "selectbackground" in fonte_tema
 
 
 def test_preview_empty():

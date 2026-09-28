@@ -873,7 +873,8 @@ def test_preview_toolbar_fonte():
 
     fonte = pathlib.Path(modulo.__file__).read_text(
         encoding="utf-8")
-    for modo in ("Selecionar", "Mover", "Zoom", "Ajustar"):
+    for modo in ("Selecionar", "Mover", "Escalar", "Girar",
+                 "Ajustar"):
         assert modo in fonte
 
 
@@ -1017,7 +1018,8 @@ def test_preview_toolbar_fonte():
 
     fonte = pathlib.Path(modulo.__file__).read_text(
         encoding="utf-8")
-    for modo in ("Selecionar", "Mover", "Zoom", "Ajustar"):
+    for modo in ("Selecionar", "Mover", "Escalar", "Girar",
+                 "Ajustar"):
         assert modo in fonte
 
 

@@ -1235,9 +1235,23 @@ def abrir_janela_cena(ws, texto: str,
         janela = tk.Toplevel()
     janela.title("ELiXX Scene Canvas")
     janela.geometry("900x620")
+    try:
+        from .tema import ELIXX_COLORS as _C_JAN, titulo_escuro
+
+        janela.configure(background=_C_JAN["background"])
+        titulo_escuro(janela)
+    except Exception:
+        pass
     barra = ttk.Frame(janela)
     barra.pack(fill="x")
-    tela = tk.Canvas(janela, highlightthickness=0)
+    try:
+        from .tema import estilizar_tk as _est_jan
+
+        _bg_jan = _C_JAN["surface"]
+    except Exception:
+        _bg_jan = "#1e1e26"
+    tela = tk.Canvas(janela, highlightthickness=0,
+                     background=_bg_jan)
     tela.pack(fill="both", expand=True)
 
     def _redesenhar():

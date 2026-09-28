@@ -18,7 +18,8 @@ __all__ = [
     "ELIXX_BORDERS", "ELIXX_DENSITY", "ELIXX_METRICS",
     "ELIXX_GAP", "ELIXX_FONT_SIZE", "ELIXX_LINE_HEIGHT",
     "ELIXX_PANEL_WIDTH", "ELIXX_TOOLBAR_HEIGHT",
-    "validar_tokens", "aplicar_tema",
+    "validar_tokens", "aplicar_tema", "estilizar_tk",
+    "titulo_escuro",
 ]
 
 ELIXX_COLORS = {
@@ -185,9 +186,115 @@ def aplicar_tema(janela) -> dict:
                foreground=[("selected", cores["text"])])
     estilo.configure("Horizontal.TProgressbar",
                      background=cores["accent"])
+    estilo.configure("Caption.TLabel",
+                     background=cores["background"],
+                     foreground=cores["text_muted"],
+                     font=(fontes["caption"][0],
+                           fontes["caption"][1]))
+    estilo.configure("Toolbar.TButton",
+                     background=cores["surface"],
+                     foreground=cores["text"],
+                     borderwidth=ELIXX_BORDERS["fina"],
+                     relief="flat", padding=(6, 2),
+                     font=(fontes["label"][0],
+                           fontes["label"][1]))
+    estilo.map("Toolbar.TButton",
+               background=[("active", cores["panel_hover"]),
+                           ("pressed", cores["selection"])])
     try:
         janela.configure(background=cores["background"])
     except Exception:
         pass
     return {"tema": "dark-premium",
             "cores": len(ELIXX_COLORS)}
+
+
+def estilizar_tk(widget, somente_leitura: bool = False):
+    """Aplica o dark em Listbox/Text/Canvas/OptionMenu/Entry.
+
+    Sem display não há widget; com widget, só `config` (nunca
+    cria/destrói). Retorna o próprio widget (encadeável).
+    """
+    cores, fontes = ELIXX_COLORS, ELIXX_FONTS
+    try:
+        classe = type(widget).__name__
+    except Exception:
+        raise ErroELiXX("Tema: widget inválido.")
+    base = {"highlightthickness": 0, "borderwidth": 0,
+            "relief": "flat"}
+    try:
+        if classe == "Listbox":
+            widget.config(background=cores["surface"],
+                          foreground=cores["text"],
+                          selectbackground=cores["selection"],
+                          selectforeground=cores["text"],
+                          activestyle="none",
+                          font=(fontes["body"][0],
+                                fontes["body"][1]), **base)
+        elif classe == "Text":
+            widget.config(background=cores["surface"],
+                          foreground=cores["text"],
+                          selectbackground=cores["selection"],
+                          selectforeground=cores["text"],
+                          insertbackground=cores["text"],
+                          font=(fontes["code"][0],
+                                fontes["code"][1]), **base)
+            try:
+                widget.config(state="disabled" if somente_leitura
+                              else "normal")
+            except Exception:
+                pass
+        elif classe == "Canvas":
+            widget.config(background=cores["surface"],
+                          **base)
+        elif classe == "OptionMenu":
+            widget.config(background=cores["surface_alt"],
+                          foreground=cores["text"],
+                          activebackground=cores["panel_hover"],
+                          activeforeground=cores["text"],
+                          font=(fontes["label"][0],
+                                fontes["label"][1]), **base)
+            try:
+                widget["menu"].config(
+                    background=cores["surface"],
+                    foreground=cores["text"],
+                    activebackground=cores["selection"],
+                    activeforeground=cores["text"],
+                    borderwidth=0)
+            except Exception:
+                pass
+        elif classe == "Entry":
+            widget.config(background=cores["surface"],
+                          foreground=cores["text"],
+                          insertbackground=cores["text"],
+                          font=(fontes["body"][0],
+                                fontes["body"][1]), **base)
+        else:
+            raise ErroELiXX(f"Tema: widget {classe} sem estilo.")
+    except ErroELiXX:
+        raise
+    except Exception as exc:
+        raise ErroELiXX(f"Tema: falha ao estilizar ({exc}).")
+    return widget
+
+
+def titulo_escuro(janela) -> dict:
+    """Titlebar escura no Windows (DWM; fora dele, no-op honesto)."""
+    try:
+        import ctypes
+        import sys
+    except ImportError:
+        return {"ok": False, "motivo": "sem ctypes"}
+    if not sys.platform.startswith("win"):
+        return {"ok": False, "motivo": "sem DWM fora do Windows"}
+    try:
+        hwnd = ctypes.windll.user32.GetParent(
+            janela.winfo_id())
+        valor = ctypes.c_int(1)
+        ctypes.windll.dwmapi.DwmSetWindowAttribute(
+            hwnd, 20, ctypes.byref(valor),
+            ctypes.sizeof(valor))
+        return {"ok": True, "motivo": "DWM dark"}
+    except Exception as exc:
+        return {"ok": False,
+                "motivo": str(exc)[:120]}

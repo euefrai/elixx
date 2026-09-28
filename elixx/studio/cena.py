@@ -158,13 +158,14 @@ class SceneTree:
             if rel.tipo in ("contem", "possui"):
                 filhos_de.setdefault(rel.origem, []).append(
                     rel.destino)
-        for ent in modelo.entidades():
+        entidades = list(modelo.entidades())
+        ids = {e.id for e in entidades}
+        for ent in entidades:
             if ent.tipo in ("janela", "tela"):
                 self.raizes.append(ent.id)
-        for ent in modelo.entidades():
+        for ent in entidades:
             kids = sorted(set(filhos_de.get(ent.id, [])))
-            kids = [k for k in kids if any(
-                e.id == k for e in modelo.entidades())]
+            kids = [k for k in kids if k in ids]
             self.nos[ent.id] = NoCena(ent.id, ent.tipo, ent.nome,
                                       kids)
         self.raizes = sorted(set(self.raizes) & set(self.nos))

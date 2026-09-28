@@ -63,6 +63,8 @@ from elixx.studio.tema import (
     ELIXX_RADIUS,
     ELIXX_SPACING,
     aplicar_tema,
+    estilizar_tk,
+    titulo_escuro,
     validar_tokens,
 )
 from elixx.studio.scene_editor import (
@@ -160,7 +162,8 @@ __all__ = [
     "estado_vazio", "montar_workspace_ui", "resumo_status",
     "ELIXX_BORDERS", "ELIXX_COLORS", "ELIXX_DENSITY",
     "ELIXX_FONTS", "ELIXX_METRICS", "ELIXX_RADIUS",
-    "ELIXX_SPACING", "aplicar_tema", "validar_tokens",
+    "ELIXX_SPACING", "aplicar_tema", "estilizar_tk",
+    "titulo_escuro", "validar_tokens",
     "AbasEditor", "SecaoInspector", "ZOOM_NIVEIS",
     "cabecalho_arquivo", "destacar_semantico",
     "formatar_arvore", "resumo_agente",

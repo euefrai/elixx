@@ -849,9 +849,10 @@ def montar_workspace_ui(ws: StudioWorkspace):
     janela.geometry(f"{larg}x{alt}")
     janela.minsize(800, 500)
     try:
-        from .tema import aplicar_tema
+        from .tema import aplicar_tema, titulo_escuro
 
         aplicar_tema(janela)
+        titulo_escuro(janela)
     except Exception:
         try:
             estilo = ttk.Style(janela)
@@ -890,6 +891,11 @@ def montar_workspace_ui(ws: StudioWorkspace):
                 if alvo in ws.editores:
                     _mostrar_editor(ws.editores[alvo])
                 _recarregar_arvore()
+            if nome in ("executar", "parar"):
+                try:
+                    _redesenhar_cena()
+                except Exception:
+                    pass
         except ErroELiXX as exc:
             ws.console.registrar("ERROR", str(exc)[:200])
         _refresh_estado()
@@ -919,6 +925,10 @@ def montar_workspace_ui(ws: StudioWorkspace):
         except ErroELiXX as exc:
             ws.console.registrar("ERROR", str(exc)[:200])
         ws.console.registrar("INFO", f"Sincronizado: {caminho}")
+        try:
+            _redesenhar_cena()
+        except Exception:
+            pass
 
     barra_status = ttk.Label(janela, text="ELiXX",
                                anchor="w")
@@ -970,10 +980,23 @@ def montar_workspace_ui(ws: StudioWorkspace):
         topo_pal = tk.Toplevel(janela)
         topo_pal.title("Command Palette (Ctrl+K)")
         topo_pal.geometry("480x300")
+        try:
+            from .tema import ELIXX_COLORS as _C_PAL
+
+            topo_pal.configure(
+                background=_C_PAL["background"])
+        except Exception:
+            pass
         entrada = ttk.Entry(topo_pal)
         entrada.pack(fill="x", padx=6, pady=6)
         lista = tk.Listbox(topo_pal)
         lista.pack(fill="both", expand=True, padx=6)
+        try:
+            from .tema import estilizar_tk as _est_pal
+
+            _est_pal(lista)
+        except Exception:
+            pass
 
         def _recarregar(_e=None):
             lista.delete(0, "end")
@@ -1079,17 +1102,34 @@ def montar_workspace_ui(ws: StudioWorkspace):
     barra_prev = ttk.Frame(centro)
     barra_prev.pack(fill="x")
     modo_prev = {"modo": "Selecionar"}
-    rotulo_modo = ttk.Label(barra_prev, text="Modo: Selecionar")
-    rotulo_modo.pack(side="left")
-    for modo in ("Selecionar", "Mover", "Zoom", "Ajustar"):
-        ttk.Button(barra_prev, text=modo, width=9,
+    rotulo_modo = ttk.Label(barra_prev, text="Selecionar",
+                            style="Caption.TLabel")
+    rotulo_modo.pack(side="left", padx=(0, 2))
+    for modo in ("Selecionar", "Mover", "Escalar", "Girar",
+                 "Ajustar"):
+        ttk.Button(barra_prev, text=modo, width=7,
+                   style="Toolbar.TButton",
                    command=lambda m=modo: (
                        modo_prev.update(modo=m),
-                       rotulo_modo.config(text=f"Modo: {m}"))
+                       rotulo_modo.config(text=m))
                    ).pack(side="left", padx=1)
+    ttk.Separator(barra_prev, orient="vertical").pack(
+        side="left", fill="y", padx=4)
+    grade_prev = {"ativa": False}
+    ttk.Button(barra_prev, text="Grid", width=5,
+               style="Toolbar.TButton",
+               command=lambda: _alternar_grade_cena()
+               ).pack(side="left", padx=1)
+    ttk.Button(barra_prev, text="Fit", width=4,
+               style="Toolbar.TButton",
+               command=lambda: _ajustar_cena()
+               ).pack(side="left", padx=1)
+    ttk.Separator(barra_prev, orient="vertical").pack(
+        side="left", fill="y", padx=4)
     zoom_prev = {"nivel": 100}
-    rotulo_zoom = ttk.Label(barra_prev, text="100%")
-    rotulo_zoom.pack(side="left", padx=4)
+    rotulo_zoom = ttk.Label(barra_prev, text="100%",
+                            style="Caption.TLabel")
+    rotulo_zoom.pack(side="left", padx=2)
 
     def _zoom_trocar(nivel):
         from .ux import ZOOM_NIVEIS
@@ -1100,72 +1140,161 @@ def montar_workspace_ui(ws: StudioWorkspace):
         rotulo_zoom.config(text=(f"{nivel}%"
                                  if nivel != "Ajustar"
                                  else "Ajustar"))
-        try:
-            tamanho = max(7, min(16, 9 + (nivel - 100) // 25)) \
-                if nivel != "Ajustar" else 9
-            lista_prev.config(font=("Segoe UI", tamanho))
-        except Exception:
-            pass
+        _redesenhar_cena()
         ws.console.registrar("INFO", f"Preview: zoom {nivel}")
 
-    tk.OptionMenu(barra_prev, tk.StringVar(value="100%"),
-                  "50%", "75%", "100%", "125%", "150%",
-                  "Ajustar",
-                  command=lambda v: _zoom_trocar(
-                      int(v[:-1]) if v != "Ajustar" else v)
-                  ).pack(side="left", padx=2)
-    ttk.Button(barra_prev, text="Executar",
-               style="Accent.TButton",
-               command=lambda: (_cmd(
-                   "executar", app.documentos.ativo or ""),
-                   rotulo_prev_status.config(
-                       text="executando" if app.preview.rodando
-                       else "parado"))
-               ).pack(side="right", padx=2)
-    rotulo_prev_status = ttk.Label(centro, text="parado")
-    rotulo_prev_status.pack(anchor="w")
+    def _zoom_passo(delta):
+        from .ux import ZOOM_NIVEIS
+
+        numericos = [z for z in ZOOM_NIVEIS if z != "Ajustar"]
+        atual = zoom_prev["nivel"]
+        if atual == "Ajustar" or atual not in numericos:
+            atual = 100
+        pos = numericos.index(atual)
+        _zoom_trocar(numericos[max(
+            0, min(len(numericos) - 1, pos + delta))])
+
+    ttk.Button(barra_prev, text="-", width=2,
+               style="Toolbar.TButton",
+               command=lambda: _zoom_passo(-1)).pack(side="left")
+    ttk.Button(barra_prev, text="+", width=2,
+               style="Toolbar.TButton",
+               command=lambda: _zoom_passo(1)).pack(
+                   side="left", padx=(0, 2))
+    rotulo_prev_status = ttk.Label(barra_prev, text="parado",
+                                   style="Caption.TLabel")
+    rotulo_prev_status.pack(side="right", padx=2)
     quadro_viewport = ttk.Frame(centro, relief="flat", borderwidth=1)
     quadro_viewport.pack(fill="both", expand=True, padx=4, pady=4)
-    lista_prev = tk.Listbox(quadro_viewport)
-    lista_prev.pack(fill="both", expand=True)
-    try:
-        from .tema import ELIXX_COLORS
-
-        lista_prev.config(background=ELIXX_COLORS["surface"],
-                          foreground=ELIXX_COLORS["text"],
-                          selectbackground=ELIXX_COLORS[
-                              "selection"],
+    lista_prev = tk.Listbox(quadro_viewport, height=4)
+    lista_prev.pack(fill="x")
+    tela_cena = tk.Canvas(quadro_viewport,
                           highlightthickness=0, borderwidth=0)
-    except Exception:
-        pass
-    tela_cena = None
-    try:
-        from .scene_canvas import SceneCanvas, desenhar
+    tela_cena.pack(fill="both", expand=True)
+    _canvas_cena = {"obj": None}
 
-        tela_cena = tk.Canvas(quadro_viewport, height=220,
-                              highlightthickness=0,
-                              borderwidth=0)
-        tela_cena.pack(fill="both", expand=True)
-        _texto_cena = ""
+    def _texto_entrada_atual():
         try:
-            _doc_cena = app.documentos.obter(
-                app.documentos.ativo or "src/main.elixx")
-            _texto_cena = _doc_cena.texto
+            doc = app.documentos.obter(
+                app.documentos.ativo or "")
+            if doc.texto.strip():
+                return doc.texto
         except Exception:
-            _texto_cena = ""
-        if _texto_cena.strip():
-            from .scene_canvas import cena_de_texto
+            pass
+        for _caminho, ed in list(
+                getattr(ws, "editores", {}).items()):
+            try:
+                if ed.documento.texto.strip():
+                    return ed.documento.texto
+            except Exception:
+                continue
+        for cand in ("src/main.elixx", "main.elixx"):
+            try:
+                texto = app.workspace.resolver(
+                    cand).read_text(encoding="utf-8")
+                if texto.strip():
+                    return texto
+            except Exception:
+                continue
+        return ""
 
-            _saida_cena = cena_de_texto(_texto_cena)
-            if _saida_cena["ok"]:
-                _canvas_cena = SceneCanvas(
-                    inspetor=app.inspetor, eventos=app.eventos)
-                _canvas_cena.montar(_saida_cena["cena"],
-                                    _saida_cena["personagens"],
-                                    ws.modelo)
-                desenhar(tela_cena, _canvas_cena)
-    except Exception:
-        pass
+    def _redesenhar_cena():
+        from .scene_canvas import SceneCanvas, cena_de_texto
+        from .tema import ELIXX_COLORS, estilizar_tk
+
+        try:
+            estilizar_tk(tela_cena)
+        except Exception:
+            pass
+        texto = _texto_entrada_atual()
+        if not texto.strip():
+            _canvas_cena["obj"] = None
+        else:
+            saida = cena_de_texto(texto)
+            if not saida["ok"]:
+                _canvas_cena["obj"] = None
+            else:
+                cena = SceneCanvas(inspetor=app.inspetor,
+                                   eventos=app.eventos)
+                cena.montar(saida["cena"],
+                            saida["personagens"], ws.modelo)
+                cena.viewport.grid = grade_prev["ativa"]
+                try:
+                    cena.viewport.set_zoom(zoom_prev["nivel"])
+                except Exception:
+                    pass
+                _canvas_cena["obj"] = cena
+        try:
+            tela_cena.delete("all")
+            if _canvas_cena["obj"] is None:
+                larg = max(tela_cena.winfo_width(), 100)
+                alt = max(tela_cena.winfo_height(), 100)
+                tela_cena.create_rectangle(
+                    0, 0, larg, alt,
+                    fill=ELIXX_COLORS["surface"], outline="")
+                tela_cena.create_text(
+                    larg // 2, alt // 2,
+                    text="Execute (F5) para ver a cena",
+                    fill=ELIXX_COLORS["text_muted"])
+            else:
+                from .scene_canvas import desenhar
+
+                desenhar(tela_cena, _canvas_cena["obj"])
+        except Exception:
+            pass
+        try:
+            rotulo_prev_status.config(
+                text="executando" if app.preview.rodando
+                else "parado")
+        except Exception:
+            pass
+
+    def _alternar_grade_cena():
+        grade_prev["ativa"] = not grade_prev["ativa"]
+        _redesenhar_cena()
+
+    def _ajustar_cena():
+        obj = _canvas_cena["obj"]
+        if obj is None:
+            return
+        try:
+            larg = max(tela_cena.winfo_width(), 100)
+            alt = max(tela_cena.winfo_height(), 100)
+            obj.enquadrar(larg, alt)
+            zoom_prev["nivel"] = obj.viewport.zoom
+            rotulo_zoom.config(
+                text=(f"{obj.viewport.zoom}%"
+                      if obj.viewport.zoom != "Ajustar"
+                      else "Ajustar"))
+        except Exception:
+            pass
+        _redesenhar_cena()
+
+    def _clique_cena(evento):
+        obj = _canvas_cena["obj"]
+        if obj is None:
+            return
+        try:
+            alvo = obj.objeto_sob_ponto(evento.x, evento.y)
+        except Exception:
+            return
+        if alvo is None:
+            return
+        try:
+            ws.preview.selecionar(alvo.ent_id or alvo.id)
+            secoes = ws.inspector.inspecionar(
+                ws.modelo, alvo.ent_id or alvo.id)
+            _render_inspetor(secoes)
+            ws.console.registrar("INFO",
+                                 f"Selecionado: {alvo.id}")
+        except ErroELiXX as exc:
+            ws.console.registrar("ERROR", str(exc)[:200])
+        _redesenhar_cena()
+        _refresh_estado()
+
+    tela_cena.bind("<Button-1>", _clique_cena)
+    tela_cena.bind("<Configure>", lambda _e: _redesenhar_cena())
+    _redesenhar_cena()
 
     direita = ttk.Frame(meio, width=240)
     ttk.Label(direita, text="INSPECTOR",
@@ -1298,7 +1427,8 @@ def montar_workspace_ui(ws: StudioWorkspace):
     lista_etapas = tk.Listbox(quadro_grafo, height=6, width=32)
     lista_etapas.pack(side="left", fill="y")
     tela_grafo = tk.Canvas(quadro_grafo, height=150,
-                           background="white")
+                           highlightthickness=0,
+                           borderwidth=0)
     tela_grafo.pack(side="left", fill="both", expand=True)
     entrada_busca = ttk.Entry(base)
 
@@ -1692,15 +1822,30 @@ def montar_workspace_ui(ws: StudioWorkspace):
         topo = tk.Toplevel(janela)
         topo.title("Contexto da tarefa")
         topo.geometry("520x420")
+        try:
+            from .tema import ELIXX_COLORS as _C_CTX
+
+            topo.configure(
+                background=_C_CTX["background"])
+        except Exception:
+            pass
         var_filtro = tk.StringVar(value="Todas")
         categorias = ["Todas"] + sorted(
             {e.categoria for e in ctx.entidades})
-        tk.OptionMenu(topo, var_filtro, *categorias).pack(
-            anchor="w")
+        _menu_ctx = tk.OptionMenu(topo, var_filtro, *categorias)
+        _menu_ctx.pack(anchor="w")
         lista = tk.Listbox(topo)
         lista.pack(fill="both", expand=True)
         detalhe = tk.Text(topo, height=8)
         detalhe.pack(fill="x")
+        try:
+            from .tema import estilizar_tk as _est_ctx2
+
+            _est_ctx2(_menu_ctx)
+            _est_ctx2(lista)
+            _est_ctx2(detalhe)
+        except Exception:
+            pass
 
         def _recarregar():
             from .agent.contexto_tarefa import ContextoTarefa as _CT
@@ -1919,6 +2064,8 @@ def montar_workspace_ui(ws: StudioWorkspace):
         _desenhar_grafo()
 
     def _desenhar_grafo():
+        from .tema import ELIXX_COLORS as _CORES_GRAFO
+
         esp = _espaco()
         tela_grafo.delete("all")
         try:
@@ -1940,13 +2087,15 @@ def montar_workspace_ui(ws: StudioWorkspace):
         for no in esp.visiveis():
             x = (no["x"] - ox) * zoom + 10
             y = (no["y"] - oy) * zoom + 10
-            cor = "lightblue" if no["id"] == esp.selecao \
-                else "white"
+            cor = _CORES_GRAFO["accent"] \
+                if no["id"] == esp.selecao \
+                else _CORES_GRAFO["surface"]
             tela_grafo.create_rectangle(x - 8, y - 8, x + 8, y + 8,
                                         fill=cor,
                                         tags=(f"no:{no['id']}",))
             tela_grafo.create_text(x, y + 18,
                                    text=no["rotulo"][:14],
+                                   fill=_CORES_GRAFO["text"],
                                    tags=(f"no:{no['id']}",))
 
     def _grafo_clique(evento):
@@ -2162,4 +2311,27 @@ def montar_workspace_ui(ws: StudioWorkspace):
                    "preview": lista_prev, "inspetor": texto_insp,
                    "editor": ed_texto, "plano": lista_plano,
                    "status": barra_status}
+    try:
+        from .tema import estilizar_tk
+
+        _estilizados = {"Listbox", "Text", "Canvas",
+                        "OptionMenu", "Entry"}
+        _pilha = [janela]
+        while _pilha:
+            _pai = _pilha.pop()
+            try:
+                _filhos = _pai.winfo_children()
+            except Exception:
+                continue
+            for _filho in _filhos:
+                _pilha.append(_filho)
+                if type(_filho).__name__ in _estilizados:
+                    try:
+                        if _filho is tela_cena:
+                            continue
+                        estilizar_tk(_filho)
+                    except Exception:
+                        continue
+    except Exception:
+        pass
     return janela
