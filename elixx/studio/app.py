@@ -44,6 +44,11 @@ ATALHOS = {
     "Ctrl+3": "layout_code",
     "Ctrl+4": "layout_preview",
     "Ctrl+Shift+F": "foco_atual",
+    "Ctrl+N": "novo_arquivo",
+    "Ctrl+Shift+N": "novo_projeto",
+    "Ctrl+W": "fechar_aba",
+    "Ctrl+Tab": "proxima_aba",
+    "Ctrl+H": "substituir",
 }
 """Mapa atalho → comando (sem quebrar atalhos do sistema: só dentro)."""
 

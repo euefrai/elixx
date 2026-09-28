@@ -1082,6 +1082,13 @@ def montar_workspace_ui(ws: StudioWorkspace):
         _menu_arq = _menu_escuro(tk.Menu(barra_menu,
                                          tearoff=0))
         _menu_arq.add_command(
+            label="Novo Projeto... (Ctrl+Shift+N)",
+            command=lambda: _boas_vindas(True))
+        _menu_arq.add_command(
+            label="Abrir Projeto... (Ctrl+O)",
+            command=lambda: _boas_vindas(True))
+        _menu_arq.add_separator()
+        _menu_arq.add_command(
             label="Salvar (Ctrl+S)",
             command=lambda: _cmd(
                 "salvar", app.documentos.ativo or ""))
@@ -1202,6 +1209,232 @@ def montar_workspace_ui(ws: StudioWorkspace):
         _refresh_estado()
 
     lista_arq.bind("<Double-Button-1>", _abrir_duplo)
+
+    # -- menu contextual do PROJECT (acoes reais; sem shell) --
+    def _no_sob_cursor(evento=None):
+        try:
+            indice = lista_arq.nearest(
+                evento.y) if evento is not None else None
+            item = lista_arq.get(
+                indice if indice is not None
+                else lista_arq.curselection())
+        except Exception:
+            return None
+        for no in ws.arvore.nos():
+            if no["nome"] in item:
+                return no
+        return None
+
+    def _menu_project(evento=None):
+        from .projeto_workspace import menu_contexto
+
+        no = _no_sob_cursor(evento)
+        if no is None:
+            return
+        tipo = ("pasta" if no["tipo"] not in ("arquivo",)
+                else "arquivo")
+        caminho = no.get("caminho", no["nome"])
+        menu = tk.Menu(janela, tearoff=0)
+        _menu_escuro(menu)
+        for item in menu_contexto(tipo, caminho):
+            menu.add_command(
+                label=item["rotulo"],
+                command=lambda i=item["id"]: _acao_project(
+                    i, caminho))
+        try:
+            menu.tk_popup(evento.x_root, evento.y_root)
+        except Exception:
+            pass
+
+    def _acao_project(acao: str, caminho: str):
+        from tkinter import messagebox, simpledialog
+
+        from .arquivos import ArvoreArquivos
+        from .projeto_workspace import duplicar_arquivo
+
+        try:
+            arv = ArvoreArquivos(app.workspace)
+            if acao == "abrir":
+                try:
+                    ed = ws.abrir_no_editor(caminho)
+                    _mostrar_editor(ed)
+                except ErroELiXX as exc:
+                    ws.console.registrar("ERROR",
+                                         str(exc)[:200])
+            elif acao == "abrir_pasta":
+                ws.console.registrar("INFO",
+                                     f"Pasta: {caminho}")
+            elif acao in ("novo_arquivo", "nova_pasta"):
+                nome = simpledialog.askstring(
+                    "Novo", "Nome:",
+                    parent=janela)
+                if not nome:
+                    return
+                rel = f"{caminho}/{nome}"
+                if acao == "novo_arquivo":
+                    arv.criar_arquivo(rel, "")
+                    _mostrar_editor(ws.abrir_no_editor(rel))
+                else:
+                    arv.criar_pasta(rel)
+            elif acao == "renomear":
+                novo = simpledialog.askstring(
+                    "Renomear", "Novo nome:",
+                    parent=janela)
+                if not novo:
+                    return
+                base = caminho.rsplit("/", 1)[0]
+                arv.renomear(caminho, f"{base}/{novo}"
+                             if "/" in caminho else novo)
+            elif acao == "duplicar":
+                duplicar_arquivo(app.workspace, caminho)
+            elif acao == "excluir":
+                if messagebox.askyesno(
+                        "Excluir", f"Excluir {caminho}?",
+                        parent=janela):
+                    arv.excluir(caminho, confirmar=True)
+            elif acao == "copiar_caminho":
+                janela.clipboard_clear()
+                janela.clipboard_append(caminho)
+            elif acao == "copiar_nome":
+                janela.clipboard_clear()
+                janela.clipboard_append(
+                    caminho.rsplit("/", 1)[-1])
+            _recarregar_arvore()
+        except (ErroELiXX, OSError) as exc:
+            ws.console.registrar("ERROR", str(exc)[:200])
+        _refresh_estado()
+
+    lista_arq.bind("<Button-3>", _menu_project)
+
+    # -- boas-vindas (somente sem projeto) --
+    def _boas_vindas(forcar: bool = False):
+        from tkinter import filedialog, simpledialog
+
+        from .projeto_workspace import (
+            BoasVindas,
+            Recentes,
+            abrir_projeto_validado,
+            novo_projeto,
+        )
+
+        estado = BoasVindas(Recentes()).mostrar(
+            False if forcar else bool(ws.estado()["projeto"]))
+        if estado is None:
+            return
+        topo_bv = tk.Toplevel(janela)
+        topo_bv.title("ELiXX Studio")
+        topo_bv.geometry("420x300")
+        try:
+            from .tema import estilizar_tk as _est_bv
+
+            _ = _est_bv
+        except Exception:
+            pass
+        ttk.Label(topo_bv, text=estado["titulo"],
+                  style="Header.TLabel").pack(pady=8)
+        ttk.Label(topo_bv,
+                  text=estado["subtitulo"]).pack(pady=2)
+
+        def _bv_novo():
+            nome = simpledialog.askstring(
+                "Novo Projeto", "Nome:", parent=topo_bv)
+            if not nome:
+                return
+            destino = filedialog.askdirectory(parent=topo_bv)
+            if not destino:
+                return
+            try:
+                info = novo_projeto(app.workspace, nome,
+                                    destino, "vazio")
+                ws.abrir_projeto(info["raiz"])
+                ws.analisar()
+                _recarregar_arvore()
+                topo_bv.destroy()
+            except (ErroELiXX, OSError) as exc:
+                ws.console.registrar("ERROR", str(exc)[:200])
+
+        def _bv_abrir():
+            destino = filedialog.askdirectory(parent=topo_bv)
+            if not destino:
+                return
+            try:
+                abrir_projeto_validado(app.workspace,
+                                       destino)
+                ws.abrir_projeto(destino)
+                ws.analisar()
+                _recarregar_arvore()
+                topo_bv.destroy()
+            except (ErroELiXX, OSError) as exc:
+                ws.console.registrar("ERROR", str(exc)[:200])
+
+        ttk.Button(topo_bv, text="Novo Projeto",
+                   style="Accent.TButton",
+                   command=_bv_novo).pack(fill="x",
+                                          padx=40, pady=4)
+        ttk.Button(topo_bv, text="Abrir Projeto",
+                   command=_bv_abrir).pack(fill="x",
+                                           padx=40, pady=4)
+        for item in estado["recentes"][:5]:
+            ttk.Button(
+                topo_bv, text=item["nome"],
+                command=lambda c=item["caminho"]: (
+                    _bv_abrir_recente(c))).pack(
+                        fill="x", padx=40, pady=1)
+
+        def _bv_abrir_recente(caminho: str):
+            try:
+                abrir_projeto_validado(app.workspace,
+                                       caminho)
+                ws.abrir_projeto(caminho)
+                ws.analisar()
+                _recarregar_arvore()
+                topo_bv.destroy()
+            except (ErroELiXX, OSError) as exc:
+                ws.console.registrar("ERROR", str(exc)[:200])
+
+    # -- atalhos F41 (somente acoes reais) --
+    def _atalho_novo_arquivo(_e=None):
+        from tkinter import simpledialog
+
+        from .arquivos import ArvoreArquivos
+
+        nome = simpledialog.askstring("Novo arquivo",
+                                      "Nome:", parent=janela)
+        if not nome:
+            return
+        try:
+            rel = f"src/{nome}"
+            ArvoreArquivos(app.workspace).criar_arquivo(
+                rel, "")
+            _mostrar_editor(ws.abrir_no_editor(rel))
+            _recarregar_arvore()
+        except (ErroELiXX, OSError) as exc:
+            ws.console.registrar("ERROR", str(exc)[:200])
+        _refresh_estado()
+
+    def _atalho_fechar_aba(_e=None):
+        from .projeto_workspace import executar_palette_f41
+
+        try:
+            executar_palette_f41(ws, "fechar_aba", {})
+        except ErroELiXX as exc:
+            ws.console.registrar("ERROR", str(exc)[:200])
+        _refresh_estado()
+
+    def _atalho_proxima_aba(_e=None):
+        from .projeto_workspace import AbasAvancadas
+
+        try:
+            nxt = AbasAvancadas(app.documentos).proxima()
+            if nxt and nxt in ws.editores:
+                _mostrar_editor(ws.editores[nxt])
+        except ErroELiXX as exc:
+            ws.console.registrar("ERROR", str(exc)[:200])
+        _refresh_estado()
+
+    janela.bind("<Control-n>", _atalho_novo_arquivo)
+    janela.bind("<Control-w>", _atalho_fechar_aba)
+    janela.bind("<Control-Tab>", _atalho_proxima_aba)
 
     def _refresh_barra():
         est = ws.estado()
@@ -2566,6 +2799,10 @@ def montar_workspace_ui(ws: StudioWorkspace):
                         estilizar_tk(_filho)
                     except Exception:
                         continue
+    except Exception:
+        pass
+    try:
+        _boas_vindas()
     except Exception:
         pass
     return janela
